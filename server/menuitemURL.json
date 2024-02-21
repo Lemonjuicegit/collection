@@ -1,0 +1,28 @@
+{
+  "xm1": {
+    "menuitemURL": [
+      {
+        "title": "\u88681",
+        "name": "\u88681",
+        "URL": "https://www.kdocs.cn/wo/sl/v31xu8h1?app_id=1p1s84MLyzLWGQjZrQIYlq"
+      },
+      {
+        "title": "sadsa",
+        "name": "2f8acd0c-afb3-4cb3-bb9b-00236e0074c6",
+        "url": "https://cn.bing.com/"
+      },
+      {
+        "title": "dsada",
+        "name": "79d21945-0005-4c01-a36c-e5d8ace7092b",
+        "URL": "https://cn.bing.com/"
+      }
+    ],
+    "title": "\u9879\u76ee\u4e00\u7ec4"
+  },
+  "xm2": { "menuitemURL": [], "title": "\u9879\u76ee\u4e8c\u7ec4" },
+  "xm3": { "menuitemURL": [], "title": "\u9879\u76ee\u4e09\u7ec4" },
+  "xm4": { "menuitemURL": [], "title": "\u9879\u76ee\u56db\u7ec4" },
+  "xm5": { "menuitemURL": [], "title": "\u9879\u76ee\u4e94\u7ec4" },
+  "xm6": { "menuitemURL": [], "title": "\u9879\u76ee\u516d\u7ec4" },
+  "xm7": { "menuitemURL": [], "title": "\u9879\u76ee\u4e03\u7ec4" }
+}

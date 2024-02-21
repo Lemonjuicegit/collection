@@ -19,7 +19,8 @@ coverage
 
 /cypress/videos/
 /cypress/screenshots/
-
+/server/__pycache__
+/server/static
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -30,3 +31,4 @@ coverage
 *.sln
 *.sw?
 *.spec
+*.pyc
