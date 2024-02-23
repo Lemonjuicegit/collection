@@ -9,8 +9,7 @@ const store = useStore()
 const ruleFormRef = ref()
 const titleName = ref('')
 const ruleForm = reactive({
-  name: '',
-  url: ''
+  routerName: '',
 })
 onBeforeMount(async () => {
   let res = await api.getmenuitemURL()
@@ -95,18 +94,15 @@ const setMenuItemName = async (index) => {
         </el-menu>
         <el-popover placement="top" :width="180" style="align-self: flex-end">
           <el-form ref="ruleFormRef" :model="ruleForm" status-icon>
-            <el-form-item label="名字">
-              <el-input v-model="ruleForm.name" />
-            </el-form-item>
-            <el-form-item label="网址">
-              <el-input v-model="ruleForm.url" />
+            <el-form-item label="路由名">
+              <el-input v-model="ruleForm.routerName" />
             </el-form-item>
           </el-form>
           <div style="text-align: right; margin: 0">
             <el-button size="small" @click="submitForm(ruleFormRef)">确认</el-button>
           </div>
           <template #reference>
-            <el-button size="small" style="background-color:#D4D7DE; color: #000000">添加网址</el-button>
+            <el-button size="small" style="background-color:#D4D7DE; color: #000000">添加路由</el-button>
           </template>
         </el-popover>
       </el-aside>

@@ -9,5 +9,6 @@ const api = {
   delmenuitemURL: (id) => axios.post(`/api/delmenuitemURL`, { xm_name, id }),
   setmenuitemName: (id, menuitemName) =>
     axios.post(`/api/setmenuitemName`, { xm_name, id, menuitemName }),
+  addRouter: (routerName) => axios.post(`/api/addRouter`, { routerName }),
 }
 export default api
