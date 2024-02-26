@@ -7,6 +7,7 @@ import { uuid } from '@/utils'
 import api from '@/api'
 const store = useStore()
 const ruleFormRef = ref()
+const Nopage = ref(false)
 const titleName = ref('')
 const ruleForm = reactive({
   name: '',
@@ -14,6 +15,10 @@ const ruleForm = reactive({
 })
 onBeforeMount(async () => {
   let res = await api.getmenuitemURL()
+  if(!res.data){
+    Nopage.value = true
+    return
+  }
   store.menuitemURL = res.data.map((item) => {
     return {
       ...item,
@@ -73,6 +78,7 @@ const setMenuItemName = async (index) => {
 </script>
 <template>
   <div class="common-layout" style="height:100%">
+    <el-result v-if="Nopage" icon="error" title="页面不存在" />
     <el-container style="height:100%">
       <el-aside width="200px" height="100%" style="display: flex;flex-direction: column ;background-color:#D4D7DE;">
         <h1 @click="store.edititle = !store.edititle" v-if="!store.edititle"
@@ -80,10 +86,10 @@ const setMenuItemName = async (index) => {
         <el-input v-if="store.edititle" @blur="setTitleName" size="large" v-model="titleName" />
         <el-menu background-color="#D4D7DE" text-color="#fff" active-text-color="#ffd04b" class="el-menu-vertical-demo"
           style="height: 880px;">
-          <el-menu-item style="padding: 5px;" :index="U.name" v-for="(U, index) in store.menuitemURL">
+          <el-menu-item el-menu-item style="padding: 1px;height: 40px; " :index="U.name" v-for="(U, index) in store.menuitemURL">
             <el-popconfirm title="是否删除" cancel-button-text="取消" confirm-button-text="确认" @confirm="remMenuItem(index)">
               <template #reference>
-                <el-button :icon="DeleteFilled" circle type="danger" size="small" />
+                <el-button circle type="danger" :icon="DeleteFilled" size="small" />
               </template>
             </el-popconfirm>
             <el-button @click="EditMenuItemName(index)" :icon="EditPen" circle type="primary" size="small" />

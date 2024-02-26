@@ -2,36 +2,29 @@
 import { ref, reactive, onBeforeMount } from 'vue'
 import DTabs from '@/components/DTabs/index.vue'
 import { DeleteFilled, EditPen } from '@element-plus/icons-vue'
-import { useStore } from '@/stores/counter'
+import { useStore } from '@/stores/store'
 import { uuid } from '@/utils'
 import api from '@/api'
 const store = useStore()
 const ruleFormRef = ref()
-const titleName = ref('')
 const ruleForm = reactive({
   routerName: '',
 })
 onBeforeMount(async () => {
-  let res = await api.getmenuitemURL()
-  store.menuitemURL = res.data.map((item) => {
-    return {
-      ...item,
-      editName: false,
-    }
-  })
-  store.menuitemURL.forEach(item => {
+  let Router = await api.getRouter()
+  let menuitem = await api.getmenuitem()
+  store.Router = Router.data.map(item => ({ title : item , editName:false}))
+  store.menuitemURL = menuitem.data
+  Router.data.forEach(item => {
     store.menuitem[item.name] = false
   })
-  res = await api.getTitle()
-  titleName.value = res.data
 })
-const addTab = (title, name, url) => {
+const addTab = (title, name) => {
   if (!store.menuitem[name]) {
     store.menuitem[name] = true
     store.urlarr.push({
       title,
-      name,
-      url
+      name
     })
   }
   store.editableTabsValue = name
@@ -39,63 +32,56 @@ const addTab = (title, name, url) => {
 
 const submitForm = async (formEl) => {
   if (!formEl) return
-  let key = uuid()
-  store.menuitem[key] = false
-  store.menuitemURL.push({
-    title: ruleForm.name,
-    name: key,
-    URL: ruleForm.url,
-    editName: false,
-  })
-  await api.addmenuitemURL({
-    title: ruleForm.name,
-    name: key,
-    URL: ruleForm.url
-  })
-}
-const setTitleName = async () => {
-  store.edititle = !store.edititle
-  await api.setTitle(titleName.value)
+  let regex = /^[a-zA-Z0-9]*$/
+  if (!regex.test(ruleForm.routerName)) {
+    return
+  }
+  await api.addRouter(ruleForm.routerName)
+  store.Router.push({ title: ruleForm.routerName, editName: false })
 }
 const remMenuItem = async (index) => {
-  store.menuitemURL = store.menuitemURL.filter((item) => item.name !== store.menuitemURL[index].name)
+  store.Router = store.Router.filter((item) => item.title !== store.Router[index].title)
   await api.delmenuitemURL(index)
 }
-const EditMenuItemName = async (index) => {
-  store.menuitemURL[index].editName = true
+const editMenuItemName = async (index) => {
+  store.Router[index].editName = true
 }
 const setMenuItemName = async (index) => {
-  store.menuitemURL[index].editName = false
+  store.Router[index].editName = false
   await api.setmenuitemName(index, store.menuitemURL[index].title)
 }
 
+const rulesRouter = reactive({
+  routerName: [
+    { pattern: /^[a-zA-Z0-9]*$/, message: '路由名只能包含字母和数字', trigger: 'change' },
+  ],
+})
 </script>
 <template>
   <div class="common-layout" style="height:100%">
     <el-container style="height:100%">
       <el-aside width="200px" height="100%" style="display: flex;flex-direction: column ;background-color:#D4D7DE;">
-        <h1 @click="store.edititle = !store.edititle" v-if="!store.edititle"
-          style="padding: 10px; color: #000000; text-align: center">{{ titleName }}</h1>
-        <el-input v-if="store.edititle" @blur="setTitleName" size="large" v-model="titleName" />
-        <el-menu background-color="#D4D7DE" text-color="#fff" active-text-color="#ffd04b" class="el-menu-vertical-demo"
+        <h1 style="padding: 10px; color: #000000; text-align: center">共享网站管理</h1>
+        <div style="border: 1px solid #606266;"/>
+        <el-menu background-color="#D4D7DE" text-color="#fff" active-text-color="#ffd04b"
           style="height: 880px;">
-          <el-menu-item style="padding: 5px;" :index="U.name" v-for="(U, index) in store.menuitemURL">
+          <el-menu-item style="padding: 1px;height: 40px; " :index="String(index)" v-for="(R, index) in store.Router">
             <el-popconfirm title="是否删除" cancel-button-text="取消" confirm-button-text="确认" @confirm="remMenuItem(index)">
               <template #reference>
                 <el-button :icon="DeleteFilled" circle type="danger" size="small" />
               </template>
             </el-popconfirm>
-            <el-button @click="EditMenuItemName(index)" :icon="EditPen" circle type="primary" size="small" />
+            <el-button @click="editMenuItemName(index)" :icon="EditPen" circle type="primary" size="small" />
             <div style="padding: 2px;"></div>
-            <el-button v-if="!U.editName" @click="addTab(U.title, U.name, U.URL)" text color="#E6A23C">{{ U.title
-            }}</el-button>
-            <el-input v-if="U.editName" @blur="setMenuItemName(index)" v-model="store.menuitemURL[index].title" />
+            <el-button v-if="!R.editName" @click="addTab(R.title, String(index))" text color="#E6A23C" >{{ R.title }}</el-button>
+            <el-input v-if="R.editName" @blur="setMenuItemName(index)" v-model="store.Router[index].title" />
           </el-menu-item>
         </el-menu>
-        <el-popover placement="top" :width="180" style="align-self: flex-end">
-          <el-form ref="ruleFormRef" :model="ruleForm" status-icon>
-            <el-form-item label="路由名">
-              <el-input v-model="ruleForm.routerName" />
+
+        <el-popover trigger="click" :width="250" style="align-self: flex-end">
+          <el-form ref="ruleFormRef" :rules="rulesRouter" :model="ruleForm" status-icon >
+            <el-form-item label="路由名" prop="routerName">
+              <el-input v-model="ruleForm.routerName"/>
             </el-form-item>
           </el-form>
           <div style="text-align: right; margin: 0">
@@ -113,4 +99,6 @@ const setMenuItemName = async (index) => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+
+</style>

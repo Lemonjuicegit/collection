@@ -7,6 +7,7 @@ export const useStore = defineStore('store', {
       urlarr: reactive([]),
       menuitem: reactive({}),
       menuitemURL: reactive([]),
+      Router:reactive({}),
       editableTabsValue: ref(''),
       edititle: ref(false),
       Permissions: ref(0),

@@ -13,6 +13,7 @@ const store = useStore()
 const removeTab = (targetName) => {
     const tabs = store.urlarr
     let activeName = store.editableTabsValue
+    console.log(targetName)
     store.menuitem[targetName] = false
     if (activeName === targetName) {
         tabs.forEach((tab, index) => {

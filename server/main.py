@@ -14,7 +14,8 @@ produce = 1
 if produce:
     for router in config['routerName']:
         app.mount(f"/{router}", StaticFiles(directory=f"static", html=True), name=router)
-    rewrite = '/api'
+    # rewrite = '/api'
+    rewrite = ''
 else:
     rewrite = ''
      
@@ -28,13 +29,20 @@ class Args(BaseModel):
     
 @app.post(f"{rewrite}/getmenuitemURL")
 async def getmenuitemURL(args: Args):
-    return menuitemURL[args.xm_name]["menuitemURL"]
+    try:
+        return menuitemURL[args.xm_name]["menuitemURL"]
+    except KeyError:
+        return False
 
 @app.post(f"{rewrite}/addmenuitemURL")
 async def addmenuitemURL(args: Args):
     menuitemURL[args.xm_name]["menuitemURL"].append(args.menuitemURL)
     with open(menuitemURLpath, 'w',encoding='utf-8') as f:
          f.write(json.dumps(menuitemURL))
+
+@app.get(f"{rewrite}/getmenuitem")
+async def addmenuitem():
+    return menuitemURL
 
 @app.post(f"{rewrite}/setmenuitemName")
 async def setmenuitemName(args: Args):
@@ -58,9 +66,25 @@ async def remove(args: Args):
     with open(menuitemURLpath, 'w',encoding='utf-8') as f:
          f.write(json.dumps(menuitemURL))
 
+@app.get(f"{rewrite}/getRouter")
+async def getRouter():
+    return config['routerName']
+         
 @app.post(f"{rewrite}/addRouter")
 async def addRouter(args: Args):
     app.mount(f"/{args.routerName}", StaticFiles(directory=f"static", html=True), name=args.routerName)
+    config['routerName'].append(args.routerName)
+    menuitemURL[args.routerName] = {
+        "menuitemURL":[],
+    "title": args.routerName
+    }
+    with open(r".\config.json", 'w',encoding='utf-8') as f:
+         f.write(json.dumps(config))
+    with open(menuitemURLpath, 'w',encoding='utf-8') as f:
+         f.write(json.dumps(menuitemURL))
+
+@app.post(f"{rewrite}/delRouter")
+async def delRouter(args: Args):
     config['routerName'].append(args.routerName)
     with open(r".\config.json", 'w',encoding='utf-8') as f:
          f.write(json.dumps(config))
