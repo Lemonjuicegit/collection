@@ -2,6 +2,7 @@ import json
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
+from routers import manage
 
 app = FastAPI()
 menuitemURLpath = r'.\menuitemURL.json'
@@ -9,16 +10,14 @@ with open(menuitemURLpath, 'r',encoding='utf-8') as f:
     menuitemURL = json.loads(f.read())
 with open(r".\config.json", 'r',encoding='utf-8') as f:
     config = json.loads(f.read())
-produce = 1
 
-if produce:
-    for router in config['routerName']:
-        app.mount(f"/{router}", StaticFiles(directory=f"static", html=True), name=router)
-    # rewrite = '/api'
-    rewrite = ''
-else:
-    rewrite = ''
-     
+for router in config['routerName']:
+    app.mount(f"/{router}", StaticFiles(directory=f"static", html=True), name=router)
+# rewrite = '/api'
+rewrite = ''
+
+    
+app.include_router(manage.router,prefix=f"{rewrite}/manage",tags=["manage"],) 
 class Args(BaseModel):
     xm_name:str=''
     menuitemURL:dict={}
@@ -66,10 +65,7 @@ async def remove(args: Args):
     with open(menuitemURLpath, 'w',encoding='utf-8') as f:
          f.write(json.dumps(menuitemURL))
 
-@app.get(f"{rewrite}/getRouter")
-async def getRouter():
-    return config['routerName']
-         
+
 @app.post(f"{rewrite}/addRouter")
 async def addRouter(args: Args):
     app.mount(f"/{args.routerName}", StaticFiles(directory=f"static", html=True), name=args.routerName)
@@ -83,11 +79,7 @@ async def addRouter(args: Args):
     with open(menuitemURLpath, 'w',encoding='utf-8') as f:
          f.write(json.dumps(menuitemURL))
 
-@app.post(f"{rewrite}/delRouter")
-async def delRouter(args: Args):
-    config['routerName'].append(args.routerName)
-    with open(r".\config.json", 'w',encoding='utf-8') as f:
-         f.write(json.dumps(config))
+
 
 if __name__ == "__main__":
     import uvicorn

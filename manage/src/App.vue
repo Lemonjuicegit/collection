@@ -27,11 +27,12 @@ const addTab = (title, name) => {
       name
     })
   }
-  store.editableTabsValue = name
+  store.ediTabsValue = name
 }
 
 const submitForm = async (formEl) => {
   if (!formEl) return
+  let key = uuid()
   let regex = /^[a-zA-Z0-9]*$/
   if (!regex.test(ruleForm.routerName)) {
     return
@@ -40,8 +41,7 @@ const submitForm = async (formEl) => {
   store.Router.push({ title: ruleForm.routerName, editName: false })
 }
 const remMenuItem = async (index) => {
-  store.Router = store.Router.filter((item) => item.title !== store.Router[index].title)
-  await api.delmenuitemURL(index)
+  await api.delRouter(index)
 }
 const editMenuItemName = async (index) => {
   store.Router[index].editName = true
@@ -66,7 +66,7 @@ const rulesRouter = reactive({
         <el-menu background-color="#D4D7DE" text-color="#fff" active-text-color="#ffd04b"
           style="height: 880px;">
           <el-menu-item style="padding: 1px;height: 40px; " :index="String(index)" v-for="(R, index) in store.Router">
-            <el-popconfirm title="是否删除" cancel-button-text="取消" confirm-button-text="确认" @confirm="remMenuItem(index)">
+            <el-popconfirm title="是否删除" cancel-button-text="取消" confirm-button-text="确认" @confirm="remMenuItem(R.title)">
               <template #reference>
                 <el-button :icon="DeleteFilled" circle type="danger" size="small" />
               </template>

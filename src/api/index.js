@@ -1,5 +1,5 @@
 import axios from 'axios'
-const xm_name = location.href.split('/').slice(-2, -1)[0]
+import {xm_name} from '@/config'
 const api = {
   getmenuitemURL: () => axios.post(`/api/getmenuitemURL`, { xm_name }),
   addmenuitemURL: (menuitemURL) =>

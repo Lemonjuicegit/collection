@@ -2,7 +2,8 @@
 import { ref, reactive, onBeforeMount } from 'vue'
 import DTabs from '@/components/DTabs/index.vue'
 import { DeleteFilled, EditPen } from '@element-plus/icons-vue'
-import { useStore } from '@/stores/counter'
+import { useStore } from '@/stores/store'
+import { xm_name } from '@/config'
 import { uuid } from '@/utils'
 import api from '@/api'
 const store = useStore()
@@ -15,39 +16,43 @@ const ruleForm = reactive({
 })
 onBeforeMount(async () => {
   let res = await api.getmenuitemURL()
-  if(!res.data){
+  if (!res.data) {
     Nopage.value = true
     return
   }
-  store.menuitemURL = res.data.map((item) => {
+  store[xm_name].menuitemURL = res.data.map((item) => {
     return {
       ...item,
       editName: false,
     }
   })
-  store.menuitemURL.forEach(item => {
-    store.menuitem[item.name] = false
+  store[xm_name].menuitem = []
+  store[xm_name].menuitemURL.forEach(item => {
+    store[xm_name].menuitem[item.name] = false
+  })
+  store[xm_name].urlarr.forEach(item => {
+    store[xm_name].menuitem[item.name] = true
   })
   res = await api.getTitle()
   titleName.value = res.data
 })
 const addTab = (title, name, url) => {
-  if (!store.menuitem[name]) {
-    store.menuitem[name] = true
-    store.urlarr.push({
+  if (!store[xm_name].menuitem[name]) {
+    store[xm_name].menuitem[name] = true
+    store[xm_name].urlarr.push({
       title,
       name,
       url
     })
   }
-  store.editableTabsValue = name
+  store[xm_name].ediTabsValue = name
 }
 
 const submitForm = async (formEl) => {
   if (!formEl) return
   let key = uuid()
-  store.menuitem[key] = false
-  store.menuitemURL.push({
+  store[xm_name].menuitem[key] = false
+  store[xm_name].menuitemURL.push({
     title: ruleForm.name,
     name: key,
     URL: ruleForm.url,
@@ -60,19 +65,19 @@ const submitForm = async (formEl) => {
   })
 }
 const setTitleName = async () => {
-  store.edititle = !store.edititle
+  store[xm_name].edititle = !store[xm_name].edititle
   await api.setTitle(titleName.value)
 }
 const remMenuItem = async (index) => {
-  store.menuitemURL = store.menuitemURL.filter((item) => item.name !== store.menuitemURL[index].name)
+  store[xm_name].menuitemURL = store[xm_name].menuitemURL.filter((item) => item.name !== store[xm_name].menuitemURL[index].name)
   await api.delmenuitemURL(index)
 }
 const EditMenuItemName = async (index) => {
-  store.menuitemURL[index].editName = true
+  store[xm_name].menuitemURL[index].editName = true
 }
 const setMenuItemName = async (index) => {
-  store.menuitemURL[index].editName = false
-  await api.setmenuitemName(index, store.menuitemURL[index].title)
+  store[xm_name].menuitemURL[index].editName = false
+  await api.setmenuitemName(index, store[xm_name].menuitemURL[index].title)
 }
 
 </script>
@@ -81,12 +86,13 @@ const setMenuItemName = async (index) => {
     <el-result v-if="Nopage" icon="error" title="页面不存在" />
     <el-container style="height:100%">
       <el-aside width="200px" height="100%" style="display: flex;flex-direction: column ;background-color:#D4D7DE;">
-        <h1 @click="store.edititle = !store.edititle" v-if="!store.edititle"
+        <h1 @click="store[xm_name].edititle = !store[xm_name].edititle" v-if="!store[xm_name].edititle"
           style="padding: 10px; color: #000000; text-align: center">{{ titleName }}</h1>
-        <el-input v-if="store.edititle" @blur="setTitleName" size="large" v-model="titleName" />
+        <el-input v-if="store[xm_name].edititle" @blur="setTitleName" size="large" v-model="titleName" />
         <el-menu background-color="#D4D7DE" text-color="#fff" active-text-color="#ffd04b" class="el-menu-vertical-demo"
           style="height: 880px;">
-          <el-menu-item el-menu-item style="padding: 1px;height: 40px; " :index="U.name" v-for="(U, index) in store.menuitemURL">
+          <el-menu-item el-menu-item style="padding: 1px;height: 40px; " :index="U.name"
+            v-for="(U, index) in store[xm_name].menuitemURL">
             <el-popconfirm title="是否删除" cancel-button-text="取消" confirm-button-text="确认" @confirm="remMenuItem(index)">
               <template #reference>
                 <el-button circle type="danger" :icon="DeleteFilled" size="small" />
@@ -96,7 +102,8 @@ const setMenuItemName = async (index) => {
             <div style="padding: 2px;"></div>
             <el-button v-if="!U.editName" @click="addTab(U.title, U.name, U.URL)" text color="#E6A23C">{{ U.title
             }}</el-button>
-            <el-input v-if="U.editName" @blur="setMenuItemName(index)" v-model="store.menuitemURL[index].title" />
+            <el-input v-if="U.editName" @blur="setMenuItemName(index)"
+              v-model="store[xm_name].menuitemURL[index].title" />
           </el-menu-item>
         </el-menu>
         <el-popover placement="top" :width="180" style="align-self: flex-end">
