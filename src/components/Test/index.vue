@@ -1,6 +1,6 @@
 <template>
     <div>
-dsadasdsa
+        dsadasdsa
     </div>
 </template>
 
@@ -8,6 +8,4 @@ dsadasdsa
 
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

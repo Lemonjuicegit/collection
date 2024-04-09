@@ -1,12 +1,15 @@
 <script setup>
 import { ref, reactive, onBeforeMount } from 'vue'
-import DTabs from '@/components/DTabs/index.vue'
+// import DTabs from '@/components/DTabs/index.vue'
+import DTabs from '@/components/DTabs/tags.vue'
 import { DeleteFilled, EditPen } from '@element-plus/icons-vue'
 import { useStore } from '@/stores/store'
+import { useTagsStore } from '@/stores/tags'
 import { xm_name } from '@/config'
 import { uuid } from '@/utils'
 import api from '@/api'
 const store = useStore()
+const tagsStore = useTagsStore()
 const ruleFormRef = ref()
 const Nopage = ref(false)
 const titleName = ref('')
@@ -39,6 +42,7 @@ onBeforeMount(async () => {
 const addTab = (title, name, url) => {
   if (!store[xm_name].menuitem[name]) {
     store[xm_name].menuitem[name] = true
+    tagsStore.setTagsItem(name, title, '/test')
     store[xm_name].urlarr.push({
       title,
       name,
