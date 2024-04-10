@@ -1,8 +1,9 @@
 <template>
-	<div class="tags" v-if="tags.show">
+	<div class="tags" v-if="tagsStore.show">
 		<ul>
-			<li class="tags-li" v-for="(item, index) in tags.list" :class="{ active: isActive(item.name) }" :key="index">
-				<router-link :to="item.path" class="tags-li-title">{{ item.title }}</router-link>
+			<li class="tags-li" v-for="(item, index) in tagsStore.list" :class="{ active: isActive(item.name) }" :key="index"
+				@click="setUrl(item.name)">
+				<router-link to="/iframe">{{ item.title }}</router-link>
 				<el-icon @click="closeTags(index)">
 					<Close />
 				</el-icon>
@@ -29,42 +30,38 @@
 
 <script setup>
 import { useTagsStore } from '@/stores/tags';
-import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
-import { useStore } from '@/stores/store'
-const store = useStore()
+import { useStore } from '@/stores/store';
+import { useRoute, useRouter } from 'vue-router';
+import { Close, ArrowDown } from '@element-plus/icons-vue'
 const route = useRoute();
 const router = useRouter();
-
-
-const tags = useTagsStore();
+const store = useStore()
+const tagsStore = useTagsStore();
 const isActive = (name) => {
-	return name === tags.active;
+	console.log(name)
+	console.log(tagsStore.active)
+	return name === tagsStore.active;
 };
+const setUrl = (name) => {
+	tagsStore.active = name
+}
 // 关闭单个标签
 const closeTags = (index) => {
-	const delItem = tags.list[index];
-	tags.delTagsItem(index);
-	const item = tags.list[index] ? tags.list[index] : tags.list[index - 1];
-	if (item) {
-		delItem.path === route.fullPath && router.push(item.path);
-	} else {
-		router.push('/');
-	}
+	
+	// tagsStore.active = tagsStore.list[index-2].name
+	tagsStore.delTagsItem(index);
 };
-
-
 
 // 关闭全部标签
 const closeAll = () => {
-	tags.clearTags();
-	router.push('/');
+	tagsStore.clearTags();
 };
 // 关闭其他标签
 const closeOther = () => {
-	const curItem = tags.list.filter(item => {
-		return item.path === route.fullPath;
+	const curItem = tagsStore.list.filter(item => {
+		return item.name === tagsStore.active;
 	});
-	tags.closeTagsOther(curItem);
+	tagsStore.closeTagsOther(curItem);
 };
 const handleTags = (command) => {
 	command === 'other' ? closeOther() : closeAll();
@@ -93,7 +90,6 @@ const handleTags = (command) => {
 	height: 100%;
 }
 
-
 .tags-li {
 	display: flex;
 	align-items: center;
@@ -119,6 +115,7 @@ const handleTags = (command) => {
 
 .tags-li.active {
 	color: #fff;
+	background-color: var(--el-color-primary);
 }
 
 .tags-li-title {

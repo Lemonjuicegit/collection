@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-
 export const useTagsStore = defineStore('tags', {
   state: () => {
     return {
@@ -17,16 +16,23 @@ export const useTagsStore = defineStore('tags', {
   },
   actions: {
     delTagsItem(index) {
+      const delItem = this.list[index]
+      console.log(delItem)
       this.list.splice(index, 1)
+      // if (this.list) {
+      //   this.active = this.list[index].name
+      //   console.log(this.active)
+      //   console.log(index)
+      // }
+      
     },
-    setTagsItem(name, title, path) {
-	const isExist = tags.nameList.some((item) => {
+    setTagsItem(name, title, path, url) {
+      const isExist = this.nameList.some((item) => {
         return item === name
       })
-	  if (!isExist) {
-
-		  this.list.push({ name, title, path })
-	  }
+      if (!isExist) {
+        this.list.push({ name, title, path, url })
+      }
     },
     clearTags() {
       this.list = []

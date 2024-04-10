@@ -19,6 +19,7 @@
     "pinia-plugin-persistedstate": "^3.2.1",
     "terser": "^5.28.1",
     "vue": "^3.4.15",
+    "vue-draggable-plus": "^0.4.0",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {

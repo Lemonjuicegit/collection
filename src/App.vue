@@ -1,18 +1,24 @@
 <script setup>
 import { ref, reactive, onBeforeMount } from 'vue'
-// import DTabs from '@/components/DTabs/index.vue'
-import DTabs from '@/components/DTabs/tags.vue'
+import { useDraggable } from 'vue-draggable-plus'
+import DTabs from '@/components/DTabs/index.vue'
+import Tabs from '@/components/DTabs/tags.vue'
 import { DeleteFilled, EditPen } from '@element-plus/icons-vue'
 import { useStore } from '@/stores/store'
 import { useTagsStore } from '@/stores/tags'
-import { xm_name } from '@/config'
+import { xm_name, permissions } from '@/config'
 import { uuid } from '@/utils'
 import api from '@/api'
 const store = useStore()
 const tagsStore = useTagsStore()
 const ruleFormRef = ref()
+const draggable = ref()
 const Nopage = ref(false)
 const titleName = ref('')
+const delURL = ref(false)
+const editURLName = ref(false)
+const addURL = ref(false)
+const menuitemURL = ref([])
 const ruleForm = reactive({
   name: '',
   url: ''
@@ -23,7 +29,7 @@ onBeforeMount(async () => {
     Nopage.value = true
     return
   }
-  store[xm_name].menuitemURL = res.data.map((item) => {
+  menuitemURL.value = res.data.map((item) => {
     return {
       ...item,
       editName: false,
@@ -36,13 +42,25 @@ onBeforeMount(async () => {
   store[xm_name].urlarr.forEach(item => {
     store[xm_name].menuitem[item.name] = true
   })
+  store[xm_name].permissions = (await api.getPermissions()).data
+  permissions.forEach(item => {
+    if ((item & store[xm_name].permissions) === 4) {
+      addURL.value = true
+    } else if ((item & store[xm_name].permissions) === 1) {
+      delURL.value = true
+    } else if ((item & store[xm_name].permissions) === 2) {
+      editURLName.value = true
+    }
+  })
   res = await api.getTitle()
   titleName.value = res.data
 })
 const addTab = (title, name, url) => {
+  store.url = url
+  tagsStore.active = name
+  tagsStore.setTagsItem(name, title, '/test', url)
   if (!store[xm_name].menuitem[name]) {
     store[xm_name].menuitem[name] = true
-    tagsStore.setTagsItem(name, title, '/test')
     store[xm_name].urlarr.push({
       title,
       name,
@@ -68,21 +86,44 @@ const submitForm = async (formEl) => {
     URL: ruleForm.url
   })
 }
-const setTitleName = async () => {
-  store[xm_name].edititle = !store[xm_name].edititle
-  await api.setTitle(titleName.value)
-}
-const remMenuItem = async (index) => {
+const remMenuItem = async (index, targetName) => {
   store[xm_name].menuitemURL = store[xm_name].menuitemURL.filter((item) => item.name !== store[xm_name].menuitemURL[index].name)
   await api.delmenuitemURL(index)
+  const tabs = store[xm_name].urlarr
+  let activeName = store[xm_name].ediTabsValue
+  if (activeName === targetName) {
+    tabs.forEach((tab, index) => {
+      if (tab.name === targetName) {
+        const nextTab = tabs[index + 1] || tabs[index - 1]
+        if (nextTab) {
+          activeName = nextTab.name
+        }
+      }
+    })
+  }
+  store[xm_name].ediTabsValue = activeName
+  store[xm_name].urlarr = tabs.filter((tab) => tab.name !== targetName)
 }
 const EditMenuItemName = async (index) => {
-  store[xm_name].menuitemURL[index].editName = true
+  menuitemURL.value[index].editName = true
 }
 const setMenuItemName = async (index) => {
-  store[xm_name].menuitemURL[index].editName = false
-  await api.setmenuitemName(index, store[xm_name].menuitemURL[index].title)
+  menuitemURL.value[index].editName = false
+  await api.setmenuitemName(index,menuitemURL.value[index].title)
 }
+
+useDraggable(draggable, menuitemURL, {
+  animation: 150,
+  async onUpdate() {
+    await api.upmenuitemURL(menuitemURL.value.map(v => {
+      return {
+        title: v.title,
+        name: v.name,
+        URL: v.URL
+      }
+    }))
+  }
+})
 
 </script>
 <template>
@@ -90,25 +131,27 @@ const setMenuItemName = async (index) => {
     <el-result v-if="Nopage" icon="error" title="页面不存在" />
     <el-container style="height:100%">
       <el-aside width="200px" height="100%" style="display: flex;flex-direction: column ;background-color:#D4D7DE;">
-        <h1 @click="store[xm_name].edititle = !store[xm_name].edititle" v-if="!store[xm_name].edititle"
-          style="padding: 10px; color: #000000; text-align: center">{{ titleName }}</h1>
-        <el-input v-if="store[xm_name].edititle" @blur="setTitleName" size="large" v-model="titleName" />
+        <h1 v-if="!store[xm_name].edititle" style="padding: 10px; color: #000000; text-align: center">{{ titleName }}</h1>
         <el-menu background-color="#D4D7DE" text-color="#fff" active-text-color="#ffd04b" class="el-menu-vertical-demo"
           style="height: 880px;">
-          <el-menu-item el-menu-item style="padding: 1px;height: 40px; " :index="U.name"
-            v-for="(U, index) in store[xm_name].menuitemURL">
-            <el-popconfirm title="是否删除" cancel-button-text="取消" confirm-button-text="确认" @confirm="remMenuItem(index)">
-              <template #reference>
-                <el-button circle type="danger" :icon="DeleteFilled" size="small" />
-              </template>
-            </el-popconfirm>
-            <el-button @click="EditMenuItemName(index)" :icon="EditPen" circle type="primary" size="small" />
-            <div style="padding: 2px;"></div>
-            <el-button v-if="!U.editName" @click="addTab(U.title, U.name, U.URL)" text color="#E6A23C">{{ U.title
-            }}</el-button>
-            <el-input v-if="U.editName" @blur="setMenuItemName(index)"
-              v-model="store[xm_name].menuitemURL[index].title" />
-          </el-menu-item>
+          <div ref="draggable">
+            <el-menu-item el-menu-item style="padding: 1px;height: 40px; " :index="U.name"
+              v-for="(U, index) in menuitemURL">
+              <el-popconfirm v-if="delURL" title="是否删除" cancel-button-text="取消" confirm-button-text="确认"
+                @confirm="remMenuItem(index, U.name)">
+                <template #reference>
+                  <el-button circle type="danger" :icon="DeleteFilled" size="small" />
+                </template>
+              </el-popconfirm>
+              <el-button v-if="editURLName" @click="EditMenuItemName(index)" :icon="EditPen" circle type="primary"
+                size="small" />
+              <div style="padding: 2px;"></div>
+              <el-button v-if="!U.editName" @click="addTab(U.title, U.name, U.URL)" text color="#E6A23C"><router-link
+                  to="/iframe" >{{ U.title }}</router-link></el-button>
+              <el-input v-if="U.editName" @blur="setMenuItemName(index)"
+                v-model="menuitemURL[index].title" />
+            </el-menu-item>
+          </div>
         </el-menu>
         <el-popover placement="top" :width="180" style="align-self: flex-end">
           <el-form ref="ruleFormRef" :model="ruleForm" status-icon>
@@ -123,12 +166,21 @@ const setMenuItemName = async (index) => {
             <el-button size="small" @click="submitForm(ruleFormRef)">确认</el-button>
           </div>
           <template #reference>
-            <el-button size="small" style="background-color:#D4D7DE; color: #000000">添加网址</el-button>
+            <el-button v-if="addURL" size="small" style="background-color:#D4D7DE; color: #000000">添加网址</el-button>
           </template>
         </el-popover>
       </el-aside>
       <el-main style="padding: 5px;">
-        <d-tabs />
+        <Tabs />
+        <div class="content">
+          <router-view v-slot="{ Component }">
+            <transition name="move" mode="out-in">
+              <keep-alive include="iframe">
+                <component :is="Component"></component>
+              </keep-alive>
+            </transition>
+          </router-view>
+        </div>
       </el-main>
     </el-container>
   </div>
