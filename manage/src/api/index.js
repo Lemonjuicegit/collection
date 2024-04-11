@@ -1,6 +1,6 @@
 import axios from 'axios'
 const api = {
-  getmenuitem: () => axios.get(`/api/getmenuitem`),
+  getmenuitem: () => axios.get(`/api/manage/getmenuitem`),
 
   getRouter: () => axios.get(`/api/manage/getRouter`),
   addRouter: (routerName) => axios.post(`/api/addRouter`, { routerName }),

@@ -1,9 +1,8 @@
 <template>
-	<div class="tags" v-if="tagsStore.show">
+	<div class="tags" >
 		<ul>
-			<li class="tags-li" v-for="(item, index) in tagsStore.list" :class="{ active: isActive(item.name) }" :key="index"
-				@click="setUrl(item.name)">
-				<router-link to="/iframe">{{ item.title }}</router-link>
+			<li class="tags-li" v-for="(item, index) in tagsStore[xm_name].list" :class="{ active: isActive(item.name) }" :key="index">
+				<router-link :to="item.path" @click="setUrl(item.name)">{{ item.title }}</router-link>
 				<el-icon @click="closeTags(index)">
 					<Close />
 				</el-icon>
@@ -30,25 +29,17 @@
 
 <script setup>
 import { useTagsStore } from '@/stores/tags';
-import { useStore } from '@/stores/store';
-import { useRoute, useRouter } from 'vue-router';
 import { Close, ArrowDown } from '@element-plus/icons-vue'
-const route = useRoute();
-const router = useRouter();
-const store = useStore()
+import { xm_name } from '@/config'
 const tagsStore = useTagsStore();
 const isActive = (name) => {
-	console.log(name)
-	console.log(tagsStore.active)
-	return name === tagsStore.active;
+	return name === tagsStore[xm_name].active;
 };
 const setUrl = (name) => {
-	tagsStore.active = name
+	tagsStore[xm_name].active = name
 }
 // 关闭单个标签
 const closeTags = (index) => {
-	
-	// tagsStore.active = tagsStore.list[index-2].name
 	tagsStore.delTagsItem(index);
 };
 
@@ -58,8 +49,8 @@ const closeAll = () => {
 };
 // 关闭其他标签
 const closeOther = () => {
-	const curItem = tagsStore.list.filter(item => {
-		return item.name === tagsStore.active;
+	const curItem = tagsStore[xm_name].list.filter(item => {
+		return item.name === tagsStore[xm_name].active;
 	});
 	tagsStore.closeTagsOther(curItem);
 };

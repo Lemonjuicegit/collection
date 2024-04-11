@@ -1,60 +1,49 @@
 import { defineStore } from 'pinia'
+import { xm_name } from '@/config'
 export const useTagsStore = defineStore('tags', {
   state: () => {
-    return {
+    let data = {}
+    data[xm_name] = {
       list: [],
       active: '',
     }
+    return data
   },
   getters: {
     show: (state) => {
-      return state.list.length > 0
+      return state[xm_name].list.length > 0
     },
     nameList: (state) => {
-      return state.list.map((item) => item.name)
+      return state[xm_name].list.map((item) => item.name)
     },
   },
   actions: {
     delTagsItem(index) {
-      const delItem = this.list[index]
-      console.log(delItem)
-      this.list.splice(index, 1)
-      // if (this.list) {
-      //   this.active = this.list[index].name
-      //   console.log(this.active)
-      //   console.log(index)
-      // }
-      
+      const delItem = this[xm_name].list[index]
+      this[xm_name].list.splice(index, 1)
+      const item = this[xm_name].list[index]
+        ? this[xm_name].list[index]
+        : this[xm_name].list[index - 1]
+      if (this[xm_name].active === delItem.name) {
+        this[xm_name].active = item.name
+      }
+      if (this[xm_name].list.length === 0) {
+        this[xm_name].active = ''
+      }
     },
-    setTagsItem(name, title, path, url) {
+    setTagsItem(name, title, url, path) {
       const isExist = this.nameList.some((item) => {
         return item === name
       })
       if (!isExist) {
-        this.list.push({ name, title, path, url })
+        this[xm_name].list.push({ name, title, url, path })
       }
     },
     clearTags() {
-      this.list = []
+      this[xm_name].list = []
     },
     closeTagsOther(data) {
-      this.list = data
-    },
-    closeCurrentTag(data) {
-      for (let i = 0, len = this.list.length; i < len; i++) {
-        const item = this.list[i]
-        if (item.path === data.$route.fullPath) {
-          if (i < len - 1) {
-            data.$router.push(this.list[i + 1].path)
-          } else if (i > 0) {
-            data.$router.push(this.list[i - 1].path)
-          } else {
-            data.$router.push('/')
-          }
-          this.list.splice(i, 1)
-          break
-        }
-      }
+      this[xm_name].list = data
     },
   },
   persist: true,

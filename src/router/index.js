@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import Test from '@/components/Test/index.vue'
 import DIframe from '@/views/DIframe.vue'
 const routes = [
@@ -14,7 +14,7 @@ const routes = [
   },
 ]
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
 })
 

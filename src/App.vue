@@ -1,7 +1,6 @@
 <script setup>
 import { ref, reactive, onBeforeMount } from 'vue'
 import { useDraggable } from 'vue-draggable-plus'
-import DTabs from '@/components/DTabs/index.vue'
 import Tabs from '@/components/DTabs/tags.vue'
 import { DeleteFilled, EditPen } from '@element-plus/icons-vue'
 import { useStore } from '@/stores/store'
@@ -36,7 +35,7 @@ onBeforeMount(async () => {
     }
   })
   store[xm_name].menuitem = []
-  store[xm_name].menuitemURL.forEach(item => {
+  menuitemURL.value.forEach(item => {
     store[xm_name].menuitem[item.name] = false
   })
   store[xm_name].urlarr.forEach(item => {
@@ -55,16 +54,17 @@ onBeforeMount(async () => {
   res = await api.getTitle()
   titleName.value = res.data
 })
-const addTab = (title, name, url) => {
-  store.url = url
-  tagsStore.active = name
-  tagsStore.setTagsItem(name, title, '/test', url)
+const addTab = (title, name, url, path) => {
+  console.log(title, name, url, path)
+  tagsStore[xm_name].active = name
+  tagsStore.setTagsItem(name, title, url, path)
   if (!store[xm_name].menuitem[name]) {
     store[xm_name].menuitem[name] = true
     store[xm_name].urlarr.push({
       title,
       name,
-      url
+      url,
+      path
     })
   }
   store[xm_name].ediTabsValue = name
@@ -74,20 +74,22 @@ const submitForm = async (formEl) => {
   if (!formEl) return
   let key = uuid()
   store[xm_name].menuitem[key] = false
-  store[xm_name].menuitemURL.push({
+  menuitemURL.value.push({
     title: ruleForm.name,
     name: key,
     URL: ruleForm.url,
+    path: '/iframe',
     editName: false,
   })
   await api.addmenuitemURL({
     title: ruleForm.name,
     name: key,
-    URL: ruleForm.url
+    URL: ruleForm.url,
+    path:'/iframe'
   })
 }
 const remMenuItem = async (index, targetName) => {
-  store[xm_name].menuitemURL = store[xm_name].menuitemURL.filter((item) => item.name !== store[xm_name].menuitemURL[index].name)
+  menuitemURL.value = menuitemURL.value.filter((item) => item.name !== menuitemURL.value[index].name)
   await api.delmenuitemURL(index)
   const tabs = store[xm_name].urlarr
   let activeName = store[xm_name].ediTabsValue
@@ -119,7 +121,8 @@ useDraggable(draggable, menuitemURL, {
       return {
         title: v.title,
         name: v.name,
-        URL: v.URL
+        URL: v.URL,
+        path:v.path
       }
     }))
   }
@@ -146,8 +149,8 @@ useDraggable(draggable, menuitemURL, {
               <el-button v-if="editURLName" @click="EditMenuItemName(index)" :icon="EditPen" circle type="primary"
                 size="small" />
               <div style="padding: 2px;"></div>
-              <el-button v-if="!U.editName" @click="addTab(U.title, U.name, U.URL)" text color="#E6A23C"><router-link
-                  to="/iframe" >{{ U.title }}</router-link></el-button>
+              <el-button v-if="!U.editName" @click="addTab(U.title, U.name, U.URL,U.path)" text color="#E6A23C"><router-link
+                  :to="U.path" >{{ U.title }}</router-link></el-button>
               <el-input v-if="U.editName" @blur="setMenuItemName(index)"
                 v-model="menuitemURL[index].title" />
             </el-menu-item>

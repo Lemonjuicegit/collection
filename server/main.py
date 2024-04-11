@@ -8,14 +8,14 @@ from readMenuitemURL import config
 app = FastAPI()
 menuitemURLpath = r'.\menuitemURL.json'
 
-# app.mount(f"/manage", StaticFiles(directory=f"manage", html=True), name="manage")
-# app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
+app.mount(f"/manage", StaticFiles(directory=f"manage", html=True), name="manage")
+app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
 for router in config.config['routerName']:
     app.mount(f"/{router}", StaticFiles(directory=f"static", html=True), name=router)
-# rewrite = '/api'
-rewrite = ''
+rewrite = '/api'
+# rewrite = ''
 
-app.include_router(manage.router,prefix=f"{rewrite}/managerouter",tags=["manage"],)
+app.include_router(manage.router,prefix=f"{rewrite}/manage",tags=["manage"],)
 class Args(BaseModel):
     xm_name:str=''
     menuitemURL:dict={}

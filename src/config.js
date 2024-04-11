@@ -1,5 +1,5 @@
-const xm_name = 'xm1'
-// const xm_name = location.href.split('/').slice(-2, -1)[0]
+// const xm_name = 'xm1'
+const xm_name = location.href.split('/')[3]
 const delURL = 1
 const editURLName = 2
 const addURL = 4
