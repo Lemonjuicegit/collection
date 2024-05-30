@@ -1,8 +1,9 @@
 <script setup>
-import { ref, reactive, onBeforeMount } from 'vue'
-import { useDraggable } from 'vue-draggable-plus'
+import { ref, reactive, onBeforeMount, computed } from 'vue'
+// import { useDraggable } from 'vue-draggable-plus'
 import Tabs from '@/components/DTabs/tags.vue'
 import { DeleteFilled, EditPen } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store'
 import { useTagsStore } from '@/stores/tags'
 import { xm_name, permissions } from '@/config'
@@ -11,36 +12,26 @@ import api from '@/api'
 const store = useStore()
 const tagsStore = useTagsStore()
 const ruleFormRef = ref()
-const draggable = ref()
 const Nopage = ref(false)
 const titleName = ref('')
 const delURL = ref(false)
 const editURLName = ref(false)
 const addURL = ref(false)
+const editPopoverVisible = ref(false)
 const menuitemURL = ref([])
 const ruleForm = reactive({
   name: '',
   url: ''
 })
+const router = useRouter()
 onBeforeMount(async () => {
   let res = await api.getmenuitemURL()
   if (!res.data) {
     Nopage.value = true
     return
   }
-  menuitemURL.value = res.data.map((item) => {
-    return {
-      ...item,
-      editName: false,
-    }
-  })
-  store[xm_name].menuitem = []
-  menuitemURL.value.forEach(item => {
-    store[xm_name].menuitem[item.name] = false
-  })
-  store[xm_name].urlarr.forEach(item => {
-    store[xm_name].menuitem[item.name] = true
-  })
+  menuitemURL.value = res.data
+
   store[xm_name].permissions = (await api.getPermissions()).data
   permissions.forEach(item => {
     if ((item & store[xm_name].permissions) === 4) {
@@ -55,9 +46,13 @@ onBeforeMount(async () => {
   titleName.value = res.data
 })
 const addTab = (title, name, url, path) => {
-  console.log(title, name, url, path)
   tagsStore[xm_name].active = name
-  tagsStore.setTagsItem(name, title, url, path)
+  const isExist = tagsStore[xm_name].list.map(item => item.name).some((item) => {
+    return item === name
+  })
+  if (!isExist) {
+    tagsStore[xm_name].list.push({ name, title, path })
+  }
   if (!store[xm_name].menuitem[name]) {
     store[xm_name].menuitem[name] = true
     store[xm_name].urlarr.push({
@@ -67,6 +62,7 @@ const addTab = (title, name, url, path) => {
       path
     })
   }
+  console.log(tagsStore[xm_name].list)
   store[xm_name].ediTabsValue = name
 }
 
@@ -85,7 +81,7 @@ const submitForm = async (formEl) => {
     title: ruleForm.name,
     name: key,
     URL: ruleForm.url,
-    path:'/iframe'
+    path: '/iframe'
   })
 }
 const remMenuItem = async (index, targetName) => {
@@ -106,56 +102,95 @@ const remMenuItem = async (index, targetName) => {
   store[xm_name].ediTabsValue = activeName
   store[xm_name].urlarr = tabs.filter((tab) => tab.name !== targetName)
 }
-const EditMenuItemName = async (index) => {
+const EditMenuItemName = (e) => {
   menuitemURL.value[index].editName = true
 }
 const setMenuItemName = async (index) => {
   menuitemURL.value[index].editName = false
-  await api.setmenuitemName(index,menuitemURL.value[index].title)
+  await api.setmenuitemName(index, menuitemURL.value[index].title)
 }
 
-useDraggable(draggable, menuitemURL, {
-  animation: 150,
-  async onUpdate() {
-    await api.upmenuitemURL(menuitemURL.value.map(v => {
-      return {
-        title: v.title,
-        name: v.name,
-        URL: v.URL,
-        path:v.path
-      }
-    }))
-  }
-})
+const remove = (node, data) => {
+  const parent = node.parent
+  const children = parent.data.children || parent.data
+  const index = children.findIndex((d) => d.id === data.id)
+  children.splice(index, 1)
+  menuitemURL.value = [...menuitemURL.value]
+}
 
+
+
+const onTagsClick = (name) => {
+  tagsStore[xm_name].active = name
+}
+const onClose = (item) => {
+  if (item) tagsStore[xm_name].active = item.name
+
+}
+
+const closeTags = (curItem) => {
+  tagsStore[xm_name].list = curItem
+}
+
+const handleNodeClick = (data) => {
+  if (!('children' in data)) {
+    router.push(data.path)
+    tagsStore[xm_name].active = data.name
+    const isExist = tagsStore[xm_name].list.map(item => item.name).some((item) => {
+      return item === data.name
+    })
+    if (!isExist) {
+      tagsStore[xm_name].list.push(data)
+    }
+    if (!store[xm_name].menuitem[data.name]) {
+      store[xm_name].menuitem[data.name] = true
+      store[xm_name].urlarr.push(data)
+    }
+    store[xm_name].ediTabsValue = data.name
+  }
+
+}
+const allowDrop = (draggingNode, dropNode, type) => {
+  if (!('children' in draggingNode.data)) {
+    return type !== 'inner'
+  } else {
+    return true
+  }
+}
+const allowDrag = (draggingNode) => {
+  return !draggingNode.data.label.includes('Level three 3-1-1')
+}
+const defaultProps = {
+  children: 'children',
+  label: 'title',
+  id: 'id'
+}
 </script>
 <template>
   <div class="common-layout" style="height:100%">
     <el-result v-if="Nopage" icon="error" title="页面不存在" />
     <el-container style="height:100%">
-      <el-aside width="200px" height="100%" style="display: flex;flex-direction: column ;background-color:#D4D7DE;">
-        <h1 v-if="!store[xm_name].edititle" style="padding: 10px; color: #000000; text-align: center">{{ titleName }}</h1>
-        <el-menu background-color="#D4D7DE" text-color="#fff" active-text-color="#ffd04b" class="el-menu-vertical-demo"
-          style="height: 880px;">
-          <div ref="draggable">
-            <el-menu-item el-menu-item style="padding: 1px;height: 40px; " :index="U.name"
-              v-for="(U, index) in menuitemURL">
-              <el-popconfirm v-if="delURL" title="是否删除" cancel-button-text="取消" confirm-button-text="确认"
-                @confirm="remMenuItem(index, U.name)">
-                <template #reference>
-                  <el-button circle type="danger" :icon="DeleteFilled" size="small" />
-                </template>
-              </el-popconfirm>
-              <el-button v-if="editURLName" @click="EditMenuItemName(index)" :icon="EditPen" circle type="primary"
-                size="small" />
-              <div style="padding: 2px;"></div>
-              <el-button v-if="!U.editName" @click="addTab(U.title, U.name, U.URL,U.path)" text color="#E6A23C"><router-link
-                  :to="U.path" >{{ U.title }}</router-link></el-button>
-              <el-input v-if="U.editName" @blur="setMenuItemName(index)"
-                v-model="menuitemURL[index].title" />
-            </el-menu-item>
-          </div>
-        </el-menu>
+      <el-aside width="200px" height="100%" style="display: flex;flex-direction: column ;">
+        <div style="display: flex; justify-content: space-between;align-items:center ">
+          <h1 v-if="!store[xm_name].edititle" style="padding: 10px; color: #000000; text-align: left">{{ titleName }}</h1>
+          <el-button size="small" type="info">...</el-button>
+        </div>
+        <el-tree style="max-width: 600px;height: 880px;" :data="menuitemURL" :props="defaultProps" draggable
+          @node-click="handleNodeClick">
+          <template #default="{ node, data }">
+            <span>{{ node.label }}</span>
+            <span style="width: 10px;" />
+            <el-popover placement="bottom" :width="200" trigger="click" :hide-after="50">
+              <template #reference>
+                <el-tag type="warning" @click="(e) => e.stopPropagation()" size="small"><el-icon>
+                    <EditPen />
+                  </el-icon></el-tag>
+              </template>
+              <el-button type="warning" size="small">改名</el-button>
+              <el-button type="warning" size="small" @click="remove(node, data)">删除</el-button>
+            </el-popover>
+          </template>
+        </el-tree>
         <el-popover placement="top" :width="180" style="align-self: flex-end">
           <el-form ref="ruleFormRef" :model="ruleForm" status-icon>
             <el-form-item label="名字">
@@ -173,13 +208,15 @@ useDraggable(draggable, menuitemURL, {
           </template>
         </el-popover>
       </el-aside>
+      <el-divider direction="vertical" style="height: 100%;" />
       <el-main style="padding: 5px;">
-        <Tabs />
-        <div class="content">
+        <Tabs :list="tagsStore[xm_name].list" :active="tagsStore[xm_name].active" @close="onClose"
+          @tags-click="onTagsClick" @close-tags="closeTags" />
+        <div class="content" style="height: 95%;">
           <router-view v-slot="{ Component }">
             <transition name="move" mode="out-in">
-              <keep-alive include="iframe">
-                <component :is="Component"></component>
+              <keep-alive>
+                <component style="height: 100%;" :is="Component"></component>
               </keep-alive>
             </transition>
           </router-view>
@@ -189,4 +226,14 @@ useDraggable(draggable, menuitemURL, {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.move-enter-active,
+.move-leave-active {
+  transition: opacity 1s ease;
+}
+
+.move-enter-from,
+.move-leave-to {
+  opacity: 0;
+}
+</style>

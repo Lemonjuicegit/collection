@@ -32,3 +32,8 @@ coverage
 *.sw?
 *.spec
 *.pyc
+send
+upload
+*.exf
+*.docx
+static2

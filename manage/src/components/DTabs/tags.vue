@@ -1,8 +1,9 @@
 <template>
-	<div class="tags">
+	<div class="tags" >
 		<ul>
 			<li class="tags-li" v-for="(item, index) in state.list" :class="{ active: isActive(item.name) }" :key="index">
-				<router-link :to="item.path" @click="handleClick(item.name)">{{ item.title }}</router-link>
+				<router-link v-if="item.path" :to="item.path" @click="handleClick(item.name)">{{ item.title }}</router-link>
+				<p v-else @click="handleClick(item.name)">{{ item.title }}</p>
 				<el-icon @click="closeTags(index)">
 					<Close />
 				</el-icon>
@@ -28,25 +29,31 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, onUpdated, watch } from 'vue';
+/**
+ * @module
+ * @vue-prop {function} tags-click 点击标签事件
+ * @param {function} close-tags 关闭事件
+ */
+import { reactive, onMounted , watch } from 'vue';
 import { Close, ArrowDown } from '@element-plus/icons-vue'
 
 const state = reactive({
-	active: '',
-	list: []
+	active:'',
+	list:[]
 })
+const props = defineProps(['active','list'])
+const emit = defineEmits(['tags-click','close-tags']);
 
-const props = defineProps(['active', 'list'])
-const emit = defineEmits(['tags-click', 'close', 'close-tags']);
-
-onMounted(() => {
+onMounted(()=>{
 	state.list = props.list
-})
-onUpdated(() => {
 	state.active = props.active
 })
-watch(props.list, () => {
+
+watch(()=>props.list,()=>{
 	state.list = props.list
+})
+watch(()=>props.active, () => {
+	state.active = props.active
 })
 
 const isActive = (name) => {
@@ -55,6 +62,7 @@ const isActive = (name) => {
 
 const handleClick = (name) => {
 	state.active = name
+	console.log(state.active)
 	emit('tags-click', name)
 }
 
@@ -62,22 +70,25 @@ const handleClick = (name) => {
 const closeTags = (index) => {
 	const delItem = state.list[index]
 	state.list.splice(index, 1)
-
+	const item = state.list[index]
+		? state.list[index]
+		: state.list[index - 1]
 	if (state.active === delItem.name) {
-		const item = state.list[index]
-			? state.list[index]
-			: state.list[index - 1]
-		emit('close', item)
-	} else {
-		emit('close', 0)
+		console.log(state.active)
+		state.active = item.name
+		
 	}
-
+	
+	if (state.list.length === 0) {
+		state.active = ''
+	}
+	emit('close-tags', state.list)
 }
 
 // 关闭全部标签
 const closeAll = () => {
 	state.list = []
-	emit('close-tags', [])
+	emit('close-tags',[])
 }
 // 关闭其他标签
 const closeOther = () => {

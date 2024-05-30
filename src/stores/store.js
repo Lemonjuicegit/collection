@@ -6,11 +6,11 @@ export const useStore = defineStore('store', {
   state: () => {
     let data = reactive({})
     data[xm_name] = {
-      urlarr: [],
-      menuitem: {},
+      // urlarr: [],
+      // menuitem: {},
       menuitemURL: [],
       ediTabsValue: '',
-      edititle: false,
+      edititle: false, // 时候编辑名字
       url:'',
     }
     return data

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, onBeforeMount } from 'vue'
-import DTabs from '@/components/DTabs/index.vue'
+import Tabs from '@/components/DTabs/tags.vue'
+import DTab from '@/components/DTabs/DTab.vue'
 import { DeleteFilled, EditPen } from '@element-plus/icons-vue'
 import { useStore } from '@/stores/store'
 import { uuid } from '@/utils'
@@ -9,6 +10,9 @@ const store = useStore()
 const ruleFormRef = ref()
 const ruleForm = reactive({
   routerName: '',
+})
+const state = reactive({
+  title:''
 })
 onBeforeMount(async () => {
   let Router = await api.getRouter()
@@ -20,6 +24,16 @@ onBeforeMount(async () => {
   })
 })
 const addTab = (title, name) => {
+  store.active = title
+
+  let isExist = store.list.map(item=>item.title).some((item) => {
+    return item === title
+  })
+  if (!isExist) {
+    store.list.push({ name: title, title, path:'' })
+  }
+  
+  state.title = title
   if (!store.menuitem[name]) {
     store.menuitem[name] = true
     store.urlarr.push({
@@ -27,6 +41,7 @@ const addTab = (title, name) => {
       name
     })
   }
+ store.menuitemURL[store.active]
   store.ediTabsValue = name
 }
 
@@ -56,6 +71,18 @@ const rulesRouter = reactive({
     { pattern: /^[a-zA-Z0-9]*$/, message: '路由名只能包含字母和数字', trigger: 'change' },
   ],
 })
+const onTagsClick = (name)=>{
+  store.active = name
+}
+const closeTags = (curItem) => {
+  console.log(curItem.length)
+  store.list = curItem
+  if(curItem.length === 0){
+    store.active = ''
+  }
+
+}
+
 </script>
 <template>
   <div class="common-layout" style="height:100%">
@@ -93,7 +120,12 @@ const rulesRouter = reactive({
         </el-popover>
       </el-aside>
       <el-main style="padding: 5px;">
-        <d-tabs />
+        <Tabs :list="store.list" :active="store.active" @tags-click="onTagsClick" @close-tags="closeTags" />
+        <DTab v-show="store.active"
+        :permissions="store.permissions"
+        :title="store.title"
+        :data="store.tableData"
+        />
       </el-main>
     </el-container>
   </div>

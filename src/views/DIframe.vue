@@ -1,7 +1,7 @@
 <template>
     <div>
         <template v-for="item in tagsStore[xm_name].list">
-            <iframe v-show="onShow(item.name)" :src="item.url" frameborder="0" width="100%" height="885px"
+            <iframe v-show="onShow(item.name)" :src="item.URL" frameborder="0" width="100%" height="100%"
                 name="iframe"></iframe>
         </template>
     </div>

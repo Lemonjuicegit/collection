@@ -50,29 +50,39 @@
 </template>
 
 <script setup>
-import { ref, reactive, onBeforeMount } from 'vue'
-import { useStore } from '@/stores/store'
+/**
+ * @
+*/
+import { ref, reactive, onBeforeMount, watch  } from 'vue'
 import permissions from '@/config'
 import api from '@/api'
 import { uuid } from '@/utils'
-const store = useStore()
 const loadingSave = ref(false)
 const formdata = reactive({
     title: '',
     operate: [],
     tableData: []
 })
-const props = defineProps(['xmname'])
 onBeforeMount(() => {
     permissions.forEach(item => {
-        if ((store.menuitemURL[props.xmname].permissions & item) === item) {
+        if ((props.permissions & item) === item) {
             formdata.operate.push(String(item))
         }
     })
-    formdata.title = store.menuitemURL[props.xmname].title
-    console.log(store.menuitemURL[props.xmname].data)
-    formdata.tableData = store.menuitemURL[props.xmname].data.map(item => ({ title: item.title, name: item.name, URL: item.URL }))
+    formdata.title = props.title
+    formdata.tableData = props.data
 })
+
+const props = defineProps(['permissions', 'data', 'title'])
+watch(() => props, () => {
+    permissions.forEach(item => {
+        if ((props.permissions & item) === item) {
+            formdata.operate.push(String(item))
+        }
+    })
+    formdata.title = props.title
+    formdata.tableData = props.data
+}, { deep: true })
 const onSubmit = async () => {
     loadingSave.value = true
     let per = 0
@@ -80,7 +90,7 @@ const onSubmit = async () => {
         per = parseInt(item) | per
     })
     await api.reviseMenuitemURL(props.xmname, {
-        data: formdata.tableData.map(item => ({ title: item.title, name: item.name, URL: item.URL ,path:'/iframe'})),
+        data: formdata.tableData.map(item => ({ title: item.title, name: item.name, URL: item.URL, path: '/iframe' })),
         title: formdata.title,
         permissions: per
     })
