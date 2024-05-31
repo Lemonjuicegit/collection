@@ -1,8 +1,9 @@
 <script setup>
-import { ref, reactive, onBeforeMount, computed } from 'vue'
+import { ref, reactive, onBeforeMount, computed, h, watch } from 'vue'
 // import { useDraggable } from 'vue-draggable-plus'
 import Tabs from '@/components/DTabs/tags.vue'
-import { DeleteFilled, EditPen } from '@element-plus/icons-vue'
+import EditMenuItemForm from '@/components/EditMenuItemForm.vue'
+import { DeleteFilled, EditPen, Delete } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from '@/stores/store'
 import { useTagsStore } from '@/stores/tags'
@@ -17,13 +18,14 @@ const titleName = ref('')
 const delURL = ref(false)
 const editURLName = ref(false)
 const addURL = ref(false)
-const editPopoverVisible = ref(false)
 const menuitemURL = ref([])
+const popoverVisible = ref(false) // 显隐弹出框
 const ruleForm = reactive({
-  name: '',
-  url: ''
+  title: '',
+  URL: ''
 })
 const router = useRouter()
+
 onBeforeMount(async () => {
   let res = await api.getmenuitemURL()
   if (!res.data) {
@@ -45,45 +47,9 @@ onBeforeMount(async () => {
   res = await api.getTitle()
   titleName.value = res.data
 })
-const addTab = (title, name, url, path) => {
-  tagsStore[xm_name].active = name
-  const isExist = tagsStore[xm_name].list.map(item => item.name).some((item) => {
-    return item === name
-  })
-  if (!isExist) {
-    tagsStore[xm_name].list.push({ name, title, path })
-  }
-  if (!store[xm_name].menuitem[name]) {
-    store[xm_name].menuitem[name] = true
-    store[xm_name].urlarr.push({
-      title,
-      name,
-      url,
-      path
-    })
-  }
-  console.log(tagsStore[xm_name].list)
-  store[xm_name].ediTabsValue = name
-}
-
-const submitForm = async (formEl) => {
-  if (!formEl) return
-  let key = uuid()
-  store[xm_name].menuitem[key] = false
-  menuitemURL.value.push({
-    title: ruleForm.name,
-    name: key,
-    URL: ruleForm.url,
-    path: '/iframe',
-    editName: false,
-  })
-  await api.addmenuitemURL({
-    title: ruleForm.name,
-    name: key,
-    URL: ruleForm.url,
-    path: '/iframe'
-  })
-}
+watch(menuitemURL, async (data) => {
+  await api.upmenuitemURL(data)
+})
 const remMenuItem = async (index, targetName) => {
   menuitemURL.value = menuitemURL.value.filter((item) => item.name !== menuitemURL.value[index].name)
   await api.delmenuitemURL(index)
@@ -102,23 +68,36 @@ const remMenuItem = async (index, targetName) => {
   store[xm_name].ediTabsValue = activeName
   store[xm_name].urlarr = tabs.filter((tab) => tab.name !== targetName)
 }
+
 const EditMenuItemName = (e) => {
   menuitemURL.value[index].editName = true
 }
+
 const setMenuItemName = async (index) => {
   menuitemURL.value[index].editName = false
   await api.setmenuitemName(index, menuitemURL.value[index].title)
 }
 
 const remove = (node, data) => {
-  const parent = node.parent
-  const children = parent.data.children || parent.data
-  const index = children.findIndex((d) => d.id === data.id)
-  children.splice(index, 1)
-  menuitemURL.value = [...menuitemURL.value]
+  ElMessageBox.confirm(
+    '你是否要删除该节点!',
+    '删除确认',
+    {
+      type: 'warning',
+      icon: Delete,
+      showCancelButton: false,
+      confirmButtonText: '确认',
+    }
+  ).then(() => {
+    const parent = node.parent
+    const children = parent.data.children || parent.data
+    const index = children.findIndex((d) => {
+      return d.name === data.name
+    })
+    children.splice(index, 1)
+    menuitemURL.value = [...menuitemURL.value]
+  })
 }
-
-
 
 const onTagsClick = (name) => {
   tagsStore[xm_name].active = name
@@ -133,7 +112,8 @@ const closeTags = (curItem) => {
 }
 
 const handleNodeClick = (data) => {
-  if (!('children' in data)) {
+  // 节点点击
+  if (data.child) {
     router.push(data.path)
     tagsStore[xm_name].active = data.name
     const isExist = tagsStore[xm_name].list.map(item => item.name).some((item) => {
@@ -148,22 +128,71 @@ const handleNodeClick = (data) => {
     }
     store[xm_name].ediTabsValue = data.name
   }
-
 }
-const allowDrop = (draggingNode, dropNode, type) => {
-  if (!('children' in draggingNode.data)) {
-    return type !== 'inner'
+const onAddNode = (data) => {
+  // 添加子节点
+  const newChild = { title: '新建节点', name: uuid(), URL: '', path: '/iframe', child: true }
+  data.children.push(newChild)
+  menuitemURL.value = [...menuitemURL.value]
+}
+const handleExpand = (data) => {
+  // 记录节点展开
+  if (store[xm_name].expandNode.indexOf(data.name) === -1) store[xm_name].expandNode.push(data.name)
+}
+const handlCollapse = (data)=>{
+  store[xm_name].expandNode = store[xm_name].expandNode.filter(item => item !== data.name)
+}
+const onEditPopover = (e) => {
+  popoverVisible.value = true
+  e.stopPropagation()
+}
+const onEditMenuItem = (data) => {
+  // 修改节点
+  if (data.child) {
+    ruleForm.title = data.title
+    ruleForm.URL = data.URL
+    ElMessageBox({
+      title: '修改',
+      message: () => h(EditMenuItemForm, {
+        form: ruleForm
+      }),
+      confirmButtonText: '确认',
+      center: true,
+      buttonSize: 'small'
+    }).then(() => {
+      data.title = ruleForm.title
+      data.URL = ruleForm.URL
+      menuitemURL.value = [...menuitemURL.value]
+    })
   } else {
-    return true
+    ruleForm.title = data.title
+    ElMessageBox({
+      title: '修改分组名称',
+      message: () => h(ElForm, [h(ElFormItem, { label: '分组名称' }, [h(ElInput, { modelValue: ruleForm.title, 'onUpdate:modelValue': value => { ruleForm.title = value }, })])]),
+      confirmButtonText: '确认',
+      center: true,
+      buttonSize: 'small'
+    }).then(() => {
+      data.title = ruleForm.title
+      menuitemURL.value = [...menuitemURL.value]
+    })
   }
 }
-const allowDrag = (draggingNode) => {
-  return !draggingNode.data.label.includes('Level three 3-1-1')
+const onAddGroup = () => {
+  menuitemURL.value.push({
+    title: '新建分组',
+    name: uuid(),
+    "child": false,
+    children: []
+  })
+}
+const handleDragEnd = async (data) => {
+  await api.upmenuitemURL(data)
 }
 const defaultProps = {
   children: 'children',
   label: 'title',
-  id: 'id'
+  name: 'name'
 }
 </script>
 <template>
@@ -173,40 +202,28 @@ const defaultProps = {
       <el-aside width="200px" height="100%" style="display: flex;flex-direction: column ;">
         <div style="display: flex; justify-content: space-between;align-items:center ">
           <h1 v-if="!store[xm_name].edititle" style="padding: 10px; color: #000000; text-align: left">{{ titleName }}</h1>
-          <el-button size="small" type="info">...</el-button>
+          <el-button size="small" type="success" @click="onAddGroup">添加分组</el-button>
         </div>
-        <el-tree style="max-width: 600px;height: 880px;" :data="menuitemURL" :props="defaultProps" draggable
-          @node-click="handleNodeClick">
+        <el-tree :default-expanded-keys="store[xm_name].expandNode" node-key="name"
+          style="max-width: 600px;height: 880px;" :data="menuitemURL" :props="defaultProps" draggable
+          @node-click="handleNodeClick" @node-expand="handleExpand" @node-drag-end="handleDragEnd(menuitemURL)" @node-collapse="handlCollapse">
           <template #default="{ node, data }">
             <span>{{ node.label }}</span>
             <span style="width: 10px;" />
             <el-popover placement="bottom" :width="200" trigger="click" :hide-after="50">
               <template #reference>
-                <el-tag type="warning" @click="(e) => e.stopPropagation()" size="small"><el-icon>
+                <el-tag :type="data.child ? 'success' : 'warning'" @click="onEditPopover" size="small"
+                  effect="dark"><el-icon>
                     <EditPen />
                   </el-icon></el-tag>
               </template>
-              <el-button type="warning" size="small">改名</el-button>
+              <el-button type="warning" size="small" @click="onEditMenuItem(data)">{{ data.child
+                ? '修改' : '改名' }}</el-button>
               <el-button type="warning" size="small" @click="remove(node, data)">删除</el-button>
+              <el-button v-if="!data.child" type="warning" size="small" @click="onAddNode(data)">添加</el-button>
             </el-popover>
           </template>
         </el-tree>
-        <el-popover placement="top" :width="180" style="align-self: flex-end">
-          <el-form ref="ruleFormRef" :model="ruleForm" status-icon>
-            <el-form-item label="名字">
-              <el-input v-model="ruleForm.name" />
-            </el-form-item>
-            <el-form-item label="网址">
-              <el-input v-model="ruleForm.url" />
-            </el-form-item>
-          </el-form>
-          <div style="text-align: right; margin: 0">
-            <el-button size="small" @click="submitForm(ruleFormRef)">确认</el-button>
-          </div>
-          <template #reference>
-            <el-button v-if="addURL" size="small" style="background-color:#D4D7DE; color: #000000">添加网址</el-button>
-          </template>
-        </el-popover>
       </el-aside>
       <el-divider direction="vertical" style="height: 100%;" />
       <el-main style="padding: 5px;">

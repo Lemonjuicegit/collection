@@ -240,42 +240,69 @@
     "permissions": 7
   },
   "test": {
-    "title": "测试",
+    "title": "\u6d4b\u8bd5",
     "permissions": 7,
     "data": [
       {
-        "title": "子项",
-        "name":"1",
+        "title": "\u5206\u7ec41",
+        "name": "1",
+        "child": false,
         "children": [
           {
             "title": "\u5165\u5e93\u6838\u67e5\u7533\u8bf7\u5355",
             "name": "3fdada4d-f16e-4fca-870d-48a76b32feef",
             "URL": "https://www.kdocs.cn/wo/sl/v34Pke6v?app_id=4fgsI1jn9p62aC51ODNZtV",
-            "path": "/iframe"
+            "path": "/iframe",
+            "child": true
           },
           {
             "title": "\u5165\u5e93\u6838\u67e5\u67e5\u8be2\u5e93",
             "name": "78578ddd-a7f8-47fb-b99a-4112220a01c9",
             "URL": "https://www.kdocs.cn/wo/sl/v32mVwr2?app_id=58oiEBWjCEreYWIiWPR1hx",
-            "path": "/iframe"
+            "path": "/iframe",
+            "child": true
           },
           {
             "title": "\u4eba\u5458\u5de5\u4f5c\u91cf\u767b\u8bb0",
             "name": "259acec5-f744-4b06-b277-f861814f83f1",
             "URL": "https://www.kdocs.cn/wo/sl/v33U3FPN?app_id=4NhEwy4hboKZRG1Wq9mYU",
-            "path": "/iframe"
+            "path": "/iframe",
+            "child": true
           },
           {
             "title": "\u9879\u76ee\u6210\u679c\u767b\u8bb0\u5e93",
             "name": "d198e3f2-09eb-44a7-b3bc-c932b3129637",
             "URL": "https://www.kdocs.cn/wo/sl/v3mUNXI?app_id=71Pnv9FgbowOiouXyeLZ9J",
-            "path": "/iframe"
+            "path": "/iframe",
+            "child": true
           },
           {
             "title": "\u9879\u76ee\u5408\u4f5c\u5916\u534f\u5e93",
             "name": "d5c7d509-7fb5-49d4-bbf5-b684acbb8f93",
             "URL": "https://www.kdocs.cn/wo/sl/v3WBRmk?app_id=79RgMB9J9BOjNox8Hjw7cX",
-            "path": "/iframe"
+            "path": "/iframe",
+            "child": true
+          }
+        ]
+      },
+      {
+        "title": "\u6d4b\u8bd5\u5206\u7ec42",
+        "name": "bfac2e20-12b2-4606-93bf-459dc19d78a1",
+        "child": false,
+        "children": [
+          {
+            "title": "vue",
+            "name": "17226128-5a35-4948-88bf-615ef55abff4",
+            "URL": "https://cn.vuejs.org/",
+            "path": "/iframe",
+            "child": true
+          },
+          {
+            "title": "\u5fc5\u5e94",
+            "name": "0ab36293-832e-4ee8-97a6-59d6f4403e36",
+            "URL": "https://cn.bing.com/",
+            "path": "/iframe",
+            "child": true
           }
         ]
       }
@@ -283,14 +310,9 @@
   },
   "utils": {
     "data": [
-      {
-        "title": "exf生成",
-        "name": "",
-        "URL": "",
-        "path": "/Dexf"
-      }
+      { "title": "exf\u751f\u6210", "name": "", "URL": "", "path": "/Dexf" }
     ],
-    "title": "实用工具",
+    "title": "\u5b9e\u7528\u5de5\u5177",
     "permissions": 0
   }
 }

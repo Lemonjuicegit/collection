@@ -11,6 +11,7 @@ export const useStore = defineStore('store', {
       menuitemURL: [],
       ediTabsValue: '',
       edititle: false, // 时候编辑名字
+      expandNode: [], // 左侧菜单节点展开
       url:'',
     }
     return data
