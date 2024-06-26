@@ -1,24 +1,20 @@
 <script setup>
-import { ref, reactive, onBeforeMount, computed, h, watch } from 'vue'
+import { ref, reactive, onBeforeMount, h, watch } from 'vue'
 // import { useDraggable } from 'vue-draggable-plus'
-import Tabs from '@/components/DTabs/tags.vue'
-import EditMenuItemForm from '@/components/EditMenuItemForm.vue'
-import { DeleteFilled, EditPen, Delete } from '@element-plus/icons-vue'
-import { useRoute, useRouter } from 'vue-router'
+import Tabs from '@components/DTabs/tags.vue'
+import EditMenuItemForm from '@components/EditMenuItemForm.vue'
+import { EditPen, Delete } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import { useStore } from '@/stores/store'
 import { useTagsStore } from '@/stores/tags'
-import { xm_name, permissions } from '@/config'
+import { xm_name } from '@/config'
 import { uuid } from '@/utils'
 import api from '@/api'
 const store = useStore()
 const tagsStore = useTagsStore()
-const ruleFormRef = ref()
 const Nopage = ref(false)
 const titleName = ref('')
-const delURL = ref(false)
-const editURLName = ref(false)
-const addURL = ref(false)
-const menuitemURL = ref([])
+const menuitemURL = ref([]) // 菜单项
 const popoverVisible = ref(false) // 显隐弹出框
 const ruleForm = reactive({
   title: '',
@@ -27,56 +23,21 @@ const ruleForm = reactive({
 const router = useRouter()
 
 onBeforeMount(async () => {
+  await api.add_use()
+
   let res = await api.getmenuitemURL()
   if (!res.data) {
     Nopage.value = true
     return
   }
   menuitemURL.value = res.data
-
-  store[xm_name].permissions = (await api.getPermissions()).data
-  permissions.forEach(item => {
-    if ((item & store[xm_name].permissions) === 4) {
-      addURL.value = true
-    } else if ((item & store[xm_name].permissions) === 1) {
-      delURL.value = true
-    } else if ((item & store[xm_name].permissions) === 2) {
-      editURLName.value = true
-    }
-  })
+  //获取Title
   res = await api.getTitle()
   titleName.value = res.data
 })
 watch(menuitemURL, async (data) => {
   await api.upmenuitemURL(data)
 })
-const remMenuItem = async (index, targetName) => {
-  menuitemURL.value = menuitemURL.value.filter((item) => item.name !== menuitemURL.value[index].name)
-  await api.delmenuitemURL(index)
-  const tabs = store[xm_name].urlarr
-  let activeName = store[xm_name].ediTabsValue
-  if (activeName === targetName) {
-    tabs.forEach((tab, index) => {
-      if (tab.name === targetName) {
-        const nextTab = tabs[index + 1] || tabs[index - 1]
-        if (nextTab) {
-          activeName = nextTab.name
-        }
-      }
-    })
-  }
-  store[xm_name].ediTabsValue = activeName
-  store[xm_name].urlarr = tabs.filter((tab) => tab.name !== targetName)
-}
-
-const EditMenuItemName = (e) => {
-  menuitemURL.value[index].editName = true
-}
-
-const setMenuItemName = async (index) => {
-  menuitemURL.value[index].editName = false
-  await api.setmenuitemName(index, menuitemURL.value[index].title)
-}
 
 const remove = (node, data) => {
   ElMessageBox.confirm(
@@ -101,10 +62,6 @@ const remove = (node, data) => {
 
 const onTagsClick = (name) => {
   tagsStore[xm_name].active = name
-}
-const onClose = (item) => {
-  if (item) tagsStore[xm_name].active = item.name
-
 }
 
 const closeTags = (curItem) => {
@@ -131,7 +88,7 @@ const handleNodeClick = (data) => {
 }
 const onAddNode = (data) => {
   // 添加子节点
-  const newChild = { title: '新建节点', name: uuid(), URL: '', path: '/iframe', child: true }
+  const newChild = { title: '新建节点', name: uuid(), URL: '', path: '/iframe', color: '#b3e19d', child: true }
   data.children.push(newChild)
   menuitemURL.value = [...menuitemURL.value]
 }
@@ -139,8 +96,20 @@ const handleExpand = (data) => {
   // 记录节点展开
   if (store[xm_name].expandNode.indexOf(data.name) === -1) store[xm_name].expandNode.push(data.name)
 }
-const handlCollapse = (data)=>{
-  store[xm_name].expandNode = store[xm_name].expandNode.filter(item => item !== data.name)
+const handlCollapse = (data) => {
+  let recursion = (a)=>{
+    for (let v of a){
+      if (!v.child){
+        let index = store[xm_name].expandNode.indexOf(v.name)
+        if(index !== -1){
+          store[xm_name].expandNode.splice(index,1)
+        }
+        recursion(v.children)
+      }
+    }
+  }
+  recursion(data.children)
+  store[xm_name].expandNode.splice(store[xm_name].expandNode.indexOf(data.name), 1)
 }
 const onEditPopover = (e) => {
   popoverVisible.value = true
@@ -182,12 +151,30 @@ const onAddGroup = () => {
   menuitemURL.value.push({
     title: '新建分组',
     name: uuid(),
-    "child": false,
+    child: false,
+    color: "#79bbff",
     children: []
   })
 }
 const handleDragEnd = async (data) => {
   await api.upmenuitemURL(data)
+}
+
+const onDropdownClick = (e) => {
+  e.stopPropagation()
+}
+const selectColor = () => {
+  menuitemURL.value = [...menuitemURL.value]
+}
+
+const undertint = (col) => {
+  // 浅色
+  let rgb = col.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
+  rgb = rgb.slice(1, 4).map(item => {
+    let num = parseInt(item, 16)
+    return Math.floor((255 - num) / 2) + num
+  }).map(item => item.toString(16).toUpperCase()).join('')
+  return `#${rgb}`
 }
 const defaultProps = {
   children: 'children',
@@ -199,36 +186,62 @@ const defaultProps = {
   <div class="common-layout" style="height:100%">
     <el-result v-if="Nopage" icon="error" title="页面不存在" />
     <el-container style="height:100%">
-      <el-aside width="200px" height="100%" style="display: flex;flex-direction: column ;">
+      <el-aside height="100%" style="display: flex;flex-direction: column ;width:250px;">
         <div style="display: flex; justify-content: space-between;align-items:center ">
-          <h1 v-if="!store[xm_name].edititle" style="padding: 10px; color: #000000; text-align: left">{{ titleName }}</h1>
-          <el-button size="small" type="success" @click="onAddGroup">添加分组</el-button>
+          <h1 style="padding: 10px; color: #000000; text-align: left">{{ titleName }}</h1>
+          <el-button v-permission="'addGroup'" size="small" type="success" @click="onAddGroup">添加分组</el-button>
         </div>
         <el-tree :default-expanded-keys="store[xm_name].expandNode" node-key="name"
-          style="max-width: 600px;height: 880px;" :data="menuitemURL" :props="defaultProps" draggable
-          @node-click="handleNodeClick" @node-expand="handleExpand" @node-drag-end="handleDragEnd(menuitemURL)" @node-collapse="handlCollapse">
+          style=" height: 100%;" :data="menuitemURL" :props="defaultProps" draggable
+          @node-click="handleNodeClick" @node-expand="handleExpand" @node-drag-end="handleDragEnd(menuitemURL)"
+          @node-collapse="handlCollapse">
           <template #default="{ node, data }">
-            <span>{{ node.label }}</span>
-            <span style="width: 10px;" />
-            <el-popover placement="bottom" :width="200" trigger="click" :hide-after="50">
-              <template #reference>
-                <el-tag :type="data.child ? 'success' : 'warning'" @click="onEditPopover" size="small"
-                  effect="dark"><el-icon>
-                    <EditPen />
-                  </el-icon></el-tag>
-              </template>
-              <el-button type="warning" size="small" @click="onEditMenuItem(data)">{{ data.child
-                ? '修改' : '改名' }}</el-button>
-              <el-button type="warning" size="small" @click="remove(node, data)">删除</el-button>
-              <el-button v-if="!data.child" type="warning" size="small" @click="onAddNode(data)">添加</el-button>
-            </el-popover>
+            <div :class="data.name === tagsStore[xm_name].active ? 'node-item' : ''" :style="{
+              display: 'flex',
+              width: '100%',
+              padding: '3px 5px 3px 5px',
+              backgroundColor: undertint(data.color),
+              borderRadius: '10px',
+            }">
+              <span :style="{
+                paddingLeft: '10px',
+                paddingRight: '10px',
+                backgroundColor: data.color,
+                borderRadius: '30px'
+              }">{{ node.label }}</span>
+              <span style="width: 10px;" />
+              <div v-permission="'edit'" style="margin-left: auto;" >
+                <el-dropdown trigger="click" size="small" :index="data.name" :hide-on-click="false">
+                  <el-tag :type="data.child ? 'success' : 'primary'" plain :color="data.color"
+                    @click="onDropdownClick" size="small" effect="dark"><el-icon>
+                      <EditPen />
+                    </el-icon></el-tag>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item  @click="onEditMenuItem(data)">{{ data.child
+                        ? '修改' : '改名' }}</el-dropdown-item>
+                      <div v-permission="'delURL'">
+                        <el-dropdown-item @click="remove(node, data)">删除</el-dropdown-item>
+                      </div>
+                      <div v-permission="'addURL'">
+                        <el-dropdown-item  @click="onAddNode(data)" v-if="!data.child">添加</el-dropdown-item>
+                      </div>
+                        <el-dropdown-item  divided>
+                            <input type="color" v-model="data.color" @change="selectColor"/>
+                          </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+
+              </div>
+            </div>
           </template>
         </el-tree>
       </el-aside>
-      <el-divider direction="vertical" style="height: 100%;" />
+      <el-divider direction="vertical" style="height: 100%;"/>
       <el-main style="padding: 5px;">
-        <Tabs :list="tagsStore[xm_name].list" :active="tagsStore[xm_name].active" @close="onClose"
-          @tags-click="onTagsClick" @close-tags="closeTags" />
+        <Tabs v-model:list="tagsStore[xm_name].list" v-model:active="tagsStore[xm_name].active" @tags-click="onTagsClick"
+          @close-tags="closeTags" />
         <div class="content" style="height: 95%;">
           <router-view v-slot="{ Component }">
             <transition name="move" mode="out-in">
@@ -252,5 +265,17 @@ const defaultProps = {
 .move-enter-from,
 .move-leave-to {
   opacity: 0;
+}
+
+.el-tree-node {
+  margin-top: 20px;
+  /* 根据需要调整上间距 */
+  margin-bottom: 20px;
+  /* 根据需要调整下间距 */
+}
+
+.node-item {
+  box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.3);
+  border: 1px solid #79bbff;
 }
 </style>

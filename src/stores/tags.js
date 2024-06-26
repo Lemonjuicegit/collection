@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { xm_name } from '@/config'
+
 export const useTagsStore = defineStore('tags', {
   state: () => {
     let data = {}
@@ -9,6 +10,5 @@ export const useTagsStore = defineStore('tags', {
     }
     return data
   },
-
   persist: true,
 })

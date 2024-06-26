@@ -52,3 +52,8 @@ def zipDir(dirpath, outFullName):
         for filename in filenames:
             zip.write(os.path.join(path, filename), os.path.join(fpath, filename))
     zip.close()
+
+if __name__ == '__main__':
+    cwdpath = Path(r'E:\exploitation\collection\server\send\192.168.2.51')
+    pathlist = [cwdpath/'500117031001GB00020F0018房屋.exf',cwdpath/'500117031006GB00008F0001房屋.exf']
+    zip_list(pathlist,cwdpath/'测试压缩包.zip')

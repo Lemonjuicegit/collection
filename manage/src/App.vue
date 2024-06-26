@@ -80,9 +80,7 @@ const closeTags = (curItem) => {
   if(curItem.length === 0){
     store.active = ''
   }
-
 }
-
 </script>
 <template>
   <div class="common-layout" style="height:100%">

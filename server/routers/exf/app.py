@@ -1,37 +1,57 @@
+from uuid import uuid4
 
-import json
 from fastapi import  APIRouter,Request
 from pydantic import BaseModel
-from readMenuitemURL import config
-from . import exf,lq_exf
-from ..Store import state,store
+from .exf import lq_exf,hc_exf
+from .. import state,store,use,zip_list
 router = APIRouter()
 
 class Args(BaseModel):
     gdb: str=''
+    state:int=0
     
-@router.get(f"/lq_exf")
+@router.post("/lqexf")
 async def lqexf(args: Args,req: Request=None):
     ip = req.client.host
     gdb = store.useFile[store.useFile.filename == args.gdb].path.values[0]
+    file_id = str(uuid4())
+    if args.state == 0:
+        use.useApi[ip].lqexf_generate = lq_exf(gdb,store.sendPath / ip)
+    try:
+        exf_state,res = next(use.useApi[ip].lqexf_generate)
+    except StopIteration:
+        zip_list(use.useApi[ip].zipFileName,store.sendPath / ip/'林权exf.zip')
+        store.addUseFile(ip, store.sendPath, "林权exf.zip",file_id)
+        use.drop_zipFile(ip)
+        use.useApi[ip].zipFileName = []
+        return {"state":state.END,"res":'林权exf生成成功!','fileID':file_id}
+    if exf_state == state.ERR:
+        use.useApi[ip].lqexf_generate = None
+        return {"state":exf_state,"res":res}
+    if exf_state == state.RES:
+        use.useApi[ip].zipFileName.append(store.sendPath / ip / res)
+        return {"state":exf_state,"res":res}
+
+@router.post("/hcexf")
+async def hcexf(args: Args,req: Request=None):
+    ip = req.client.host
+    file_id = str(uuid4())
+    gdb = store.useFile[store.useFile.filename == args.gdb].path.values[0]
+    if args.state == 0:
+        use.useApi[ip].hcexf_generate = hc_exf(gdb,store.sendPath / ip)
+    try:
+        exf_state,res = next(use.useApi[ip].hcexf_generate)
+    except StopIteration:
+        zip_list(use.useApi[ip].zipFileName,store.sendPath / ip/'合川exf数据.zip')
+        store.addUseFile(ip, store.sendPath,"合川exf数据.zip",file_id)
+        use.drop_zipFile(ip)
+        use.useApi[ip].zipFileName = []
+        return {"state":state.END,"res":'','fileID':file_id}
+    if exf_state == state.ERR:
+        use.useApi[ip].hcexf_generate = None
+        return {"state":exf_state,"res":res}
+    if exf_state == state.RES:
+        use.useApi[ip].zipFileName.append(store.sendPath / ip / res)
+        return {"state":exf_state,"res":res}
+
     
-    return config.menuitemURL
-
-@router.get(f"/getRouter")
-async def getRouter():
-    return config.config['routerName']
-         
-@router.post(f"/delRouter")
-async def delRouter(args: Args):
-    config.config['routerName'].remove(args.routerName)
-    del config.menuitemURL[args.routerName]
-    with open(configpath, 'w',encoding='utf-8') as f:
-         f.write(json.dumps(config.config))
-    with open(menuitemURLpath, 'w',encoding='utf-8') as f:
-         f.write(json.dumps(config.menuitemURL))
-
-@router.post(f"/reviseMenuitemURL")
-async def reviseMenuitemURL(args: Args):
-    config.menuitemURL[args.routerName] = args.menuitemURL
-    with open(menuitemURLpath, 'w',encoding='utf-8') as f:
-         f.write(json.dumps(config.menuitemURL))

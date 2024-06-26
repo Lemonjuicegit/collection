@@ -7,7 +7,6 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-vite.config.js
 package-lock.json
 test.js
 node_modules
@@ -37,3 +36,5 @@ upload
 *.exf
 *.docx
 static2
+home
+home2

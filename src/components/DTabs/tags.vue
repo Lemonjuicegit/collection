@@ -1,7 +1,7 @@
 <template>
 	<div class="tags">
 		<ul>
-			<li class="tags-li" v-for="(item, index) in state.list" :class="{ active: isActive(item.name) }" :key="index">
+			<li class="tags-li" v-for="(item, index) in list" :class="{ active: isActive(item.name) }" :key="index">
 				<router-link :to="item.path" @click="handleClick(item.name)">{{ item.title }}</router-link>
 				<el-icon @click="closeTags(index)">
 					<Close />
@@ -28,63 +28,47 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, onUpdated, watch } from 'vue';
 import { Close, ArrowDown } from '@element-plus/icons-vue'
-
-const state = reactive({
-	active: '',
-	list: []
-})
-
-const props = defineProps(['active', 'list'])
+const active = defineModel('active')
+const list = defineModel('list')
 const emit = defineEmits(['tags-click', 'close', 'close-tags']);
 
-onMounted(() => {
-	state.list = props.list
-})
-onUpdated(() => {
-	state.active = props.active
-})
-watch(props.list, () => {
-	state.list = props.list
-})
 
 const isActive = (name) => {
-	return name === state.active
+	return name === active.value
 }
 
 const handleClick = (name) => {
-	state.active = name
+	active.value = name
 	emit('tags-click', name)
 }
 
 // 关闭单个标签
 const closeTags = (index) => {
-	const delItem = state.list[index]
-	state.list.splice(index, 1)
-
-	if (state.active === delItem.name) {
-		const item = state.list[index]
-			? state.list[index]
-			: state.list[index - 1]
+	const delItem = list.value[index]
+	list.value.splice(index, 1)
+	if (active.value === delItem.name) {
+		const item = list.value[index]
+			? list.value[index]
+			: list.value[index - 1]
+		active.value = item.name
 		emit('close', item)
 	} else {
 		emit('close', 0)
 	}
-
 }
 
 // 关闭全部标签
 const closeAll = () => {
-	state.list = []
+	list.value = []
 	emit('close-tags', [])
 }
 // 关闭其他标签
 const closeOther = () => {
-	const curItem = state.list.filter(item => {
-		return item.name === state.active;
+	const curItem = list.value.filter(item => {
+		return item.name === active.value;
 	});
-	state.list = curItem
+	list.value = curItem
 	emit('close-tags', curItem)
 }
 const handleTags = (command) => {

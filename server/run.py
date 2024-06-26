@@ -1,72 +1,156 @@
-import win32serviceutil
-import win32service
-import win32event
-import servicemanager
-import socket
-import os
-import sys
-import subprocess
-import time
-import signal
+import json
+from fastapi import FastAPI,Request, UploadFile,File
+from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse
+from routers import manage,exf,searchPhoto
+from readMenuitemURL import config
+from routers import store,unzip,log,use,Api,get_tbbh
 
-# 定义FastAPI应用程序的路径
-APP_PATH = "path_to_your_fastapi_app.py"
+static_dir_absolute = f"{config.cwdpath}\\static"
+manage_dir_absolute = f"{config.cwdpath}\\manage"
+home_dir_absolute = f"{config.cwdpath}\\home"
+assets_dir_absolute = f"{config.cwdpath}\\static\\assets"
+app = FastAPI()
 
-# 定义服务类
-class FastAPIService(win32serviceutil.ServiceFramework):
-    _svc_name_ = "FastAPIService"
-    _svc_display_name_ = "FastAPI Service"
+menuitemURLpath = r'.\menuitemURL.json'
 
-    def __init__(self, args):
-        win32serviceutil.ServiceFramework.__init__(self, args)
-        self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
-        socket.setdefaulttimeout(60)
-        self.is_running = True
+flhpath = r'\\Lzd202201031623\2023年度非粮化验收\1.举证照片成果'
+flh_tbbh = get_tbbh()
 
-    # 启动服务
-    def SvcDoRun(self):
-        servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
-                              servicemanager.PYS_SERVICE_STARTED,
-                              (self._svc_name_, ''))
-        self.main()
+app.mount("/manage", StaticFiles(directory=manage_dir_absolute, html=True), name="manage")
+app.mount("/assets", StaticFiles(directory=assets_dir_absolute), name="assets")
+app.mount("/home", StaticFiles(directory=home_dir_absolute, html=True), name="home")
+for tbbh in flh_tbbh:
+    try:
+        app.mount(f"/{tbbh}", StaticFiles(directory=f"{flhpath}\\{tbbh}"), name=tbbh)
+    except RuntimeError:
+        pass
+for router in config.config['routerName']:
+    app.mount(f"/{router}", StaticFiles(directory=static_dir_absolute, html=True), name=router)
+rewrite = '/api'
+rewrite = ''
 
-    # 停止服务
-    def SvcStop(self):
-        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
-        win32event.SetEvent(self.hWaitStop)
-        self.is_running = False
+app.include_router(manage.router,prefix=f"{rewrite}/manage",tags=["manage"],)
+app.include_router(exf.router,prefix=f"{rewrite}/exf",tags=["exf"],)
+app.include_router(searchPhoto.router,prefix=f"{rewrite}/searchPhoto",tags=["searchPhoto"],)
 
-    # 运行主函数
-    def main(self):
-        while self.is_running:
-            # 启动FastAPI应用程序
-            self.start_fastapi_app()
-            # 检测FastAPI应用程序是否正在运行，如果不在运行则重启
-            while self.is_running and self.is_fastapi_app_running():
-                time.sleep(5)
-            time.sleep(5)
+class Args(BaseModel):
+    xm_name:str=''
+    menuitemURL:dict={}
+    menuitem:dict={}
+    data:list=[]
+    menuitemName:str=''
+    title:str=''
+    id:int=0
+    routerName:str=''
+ 
+@app.post(f"{rewrite}/add_use")
+async def add_use(req: Request):
+    ip = req.client.host
+    use.useApi[ip] = Api(ip)
+    (store.uploadPath /ip).mkdir(exist_ok=True, parents=True)
+    (store.sendPath / ip).mkdir(exist_ok=True, parents=True)
+    log.info(f"{ip}连接")
+    return 1
 
-    # 启动FastAPI应用程序
-    def start_fastapi_app(self):
-        subprocess.Popen([sys.executable, APP_PATH])
+@app.post(f"{rewrite}/upload")
+async def create_upload_file(file:UploadFile=File(),filetype:str='', req: Request=None):
+    ip = req.client.host
+    log.info(f"upload:{ip}-{file.filename}")
+    file_content = await file.read()
+    filename = file.filename
+    extractpath = store.uploadPath / ip / filename
+    store.addUseFile(ip,store.uploadPath, filename)
+    with open(extractpath, "wb") as buffer:
+        buffer.write(file_content)
+    if filetype == 'gdb':
+        unzip(extractpath, store.uploadPath / ip)
+        store.addUseFile(ip,store.uploadPath, f"{filename.split('.')[0]}.gdb")
+        return filename
+    if filetype == 'zip':
+        namelist = unzip(extractpath, store.uploadPath / ip / file.filename)
+        for f in namelist:
+            store.addUseFile(ip,store.uploadPath, f)
+    elif filetype == 'shp':
+        filelist = unzip(extractpath, store.uploadPath / ip)
+        for f in filelist:
+            store.addUseFile(ip,store.uploadPath, f)
+    return filename
 
-    # 检测FastAPI应用程序是否正在运行
-    def is_fastapi_app_running(self):
-        with subprocess.Popen(["tasklist", "/FI", "IMAGENAME eq python.exe"], stdout=subprocess.PIPE,
-            shell=True, preexec_fn=os.setsid) as proc:
-            output = proc.stdout.read().decode('gbk')
-            return APP_PATH in output
-
-
-# 定义服务入口函数
-def main():
-    if len(sys.argv) == 1:
-        servicemanager.Initialize()
-        servicemanager.PrepareToHostSingle(FastAPIService)
-        servicemanager.StartServiceCtrlDispatcher()
+@app.post(f"{rewrite}/download")
+async def create_download_file(filename, req: Request):
+    ip = req.client.host
+    log.info(f"create_download_file:{ip}")
+    # 查找要下载的文件
+    path = store.useFile[
+        (store.useFile.ip == ip)
+        & ((store.useFile.name == filename) | (store.useFile.filename == filename))
+    ]
+    if path.shape[0]:
+        return FileResponse(path.path.values[0], filename=path.filename.values[0])
     else:
-        win32serviceutil.HandleCommandLine(FastAPIService)
+        return 0
 
-# 运行服务
-if __name__ == '__main__':
-    main()
+
+@app.post(f"{rewrite}/getmenuitemURL")
+async def getmenuitemURL(args: Args):
+    log.info(f"{args.xm_name}")
+    try:
+        return config.menuitemURL[args.xm_name]["data"]
+    except KeyError:
+        log.err(f"'{args.xm_name}'路径不存在")
+
+@app.post(f"{rewrite}/addmenuitemURL")
+async def addmenuitemURL(args: Args):
+    config.menuitemURL[args.xm_name]["data"].append(args.menuitemURL)
+    with open(menuitemURLpath, 'w',encoding='utf-8') as f:
+         f.write(json.dumps(config.menuitemURL))
+
+@app.post(f"{rewrite}/setmenuitemName")
+async def setmenuitemName(args: Args):
+    config.menuitemURL[args.xm_name]["data"][args.id]['title'] = args.menuitemName
+    with open(menuitemURLpath, 'w',encoding='utf-8') as f:
+         f.write(json.dumps(config.menuitemURL))
+
+@app.post(f"{rewrite}/gettitle")
+async def getTitle(args: Args):
+    return config.menuitemURL[args.xm_name]["title"]
+
+@app.post(f"{rewrite}/settitle")
+async def setTitle(args: Args):
+    config.menuitemURL[args.xm_name]["title"] = args.title
+    with open(menuitemURLpath, 'w',encoding='utf-8') as f:
+         f.write(json.dumps(config.menuitemURL))
+
+@app.post(f"{rewrite}/getPermissions")
+async def getPermissions(args: Args):
+    return config.menuitemURL[args.xm_name]["permissions"]
+
+@app.post(f"{rewrite}/delmenuitemURL")
+async def remove(args: Args):
+    del config.menuitemURL[args.xm_name]["data"][args.id]
+    with open(menuitemURLpath, 'w',encoding='utf-8') as f:
+         f.write(json.dumps(config.menuitemURL))
+
+
+@app.post(f"{rewrite}/addRouter")
+async def addRouter(args: Args):
+    app.mount(f"/{args.routerName}", StaticFiles(directory=f"static", html=True), name=args.routerName)
+    config.config['routerName'].append(args.routerName)
+    config.menuitemURL[args.routerName] = Args.menuitem
+    with open(r".\config.json", 'w',encoding='utf-8') as f:
+         f.write(json.dumps(config.config))
+    with open(menuitemURLpath, 'w',encoding='utf-8') as f:
+         f.write(json.dumps(config.menuitemURL))
+         
+@app.post(f"{rewrite}/upmenuitemURL")
+async def upmenuitemURL(args: Args):
+    config.menuitemURL[args.xm_name]['data'] = args.data
+    with open(menuitemURLpath, 'w',encoding='utf-8') as f:
+         f.write(json.dumps(config.menuitemURL))
+
+if __name__ == "__main__":
+    import uvicorn
+    # uvicorn.run(app, host="192.168.2.139", port=45454)
+    uvicorn.run(app, host="192.168.2.51", port=45454)

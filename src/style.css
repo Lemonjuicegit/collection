@@ -21,3 +21,7 @@ a {
   color: inherit; /* 继承父元素的文本颜色 */
    text-decoration: none;
 }
+.el-tree-node {
+  margin-top: 5px; /* 根据需要调整上间距 */
+  margin-bottom: 5px; /* 根据需要调整下间距 */
+}

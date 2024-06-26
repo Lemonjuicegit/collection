@@ -1,0 +1,104 @@
+{
+  "interface": [
+    {
+      "name": "package",
+      "ms": "顶级包",
+      "module": "package",
+      "type": "catalog",
+      "id": [0],
+      "args": [],
+      "key_args": {},
+      "return": [],
+      "child": false,
+      "children": [
+        {
+          "name": "interface",
+          "ms": "接口相关的处理模块",
+          "module": "package.interface",
+          "type": "catalog",
+          "id": [0, 0],
+          "args": [],
+          "key_args": {},
+          "return": [],
+          "child": false,
+          "children": [
+            {
+              "name": "setup",
+              "ms": "用于处理接口数据功能的模块",
+              "module": "package.interface.setup",
+              "type": "module",
+              "id": [0, 0, 0],
+              "args": [],
+              "key_args": {},
+              "return": [],
+              "child": false,
+              "children": [
+                {
+                  "name": "getInterface",
+                  "ms": "获得接口json数据",
+                  "module": "package.interface.setup",
+                  "type": "func",
+                  "id": [0, 0, 0, 0],
+                  "args": [],
+                  "key_args": {},
+                  "return": ["dcit"],
+                  "child": false,
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "getServerIp",
+          "ms": "获取服务本机ip",
+          "module": "package",
+          "type": "func",
+          "id": [0, 1],
+          "args": [],
+          "key_args": {},
+          "return": ["str"],
+          "child": true,
+          "children": []
+        },
+        {
+          "name": "gdMap",
+          "ms": "获取高德地图数据",
+          "module": "package.gdMap",
+          "type": "catalog",
+          "id": [0, 2],
+          "args": [],
+          "key_args": {},
+          "return": [],
+          "child": false,
+          "children": [
+            {
+              "name": "getURL",
+              "ms": "高德地图多边形查询url",
+              "module": "package.gdMap",
+              "type": "func",
+              "id": [0, 2, 0],
+              "args": ["str"],
+              "key_args": {},
+              "return": ["str"],
+              "child": true,
+              "children": []
+            },
+            {
+              "name": "getPlaceData_cll",
+              "ms": "高德地图多边形查询",
+              "module": "package.gdMap",
+              "type": "func",
+              "id": [0, 2, 1],
+              "args": ["upload","list","send"],
+              "key_args": {},
+              "return": ["filelist"],
+              "child": true,
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

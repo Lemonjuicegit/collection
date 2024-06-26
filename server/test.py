@@ -1,4 +1,6 @@
-import os 
+from package.coordinateStr import test
 
-current = os.path.dirname(__file__)
-print(current)
+
+print(test)
+
+

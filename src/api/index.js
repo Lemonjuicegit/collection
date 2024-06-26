@@ -2,6 +2,7 @@ import axios from 'axios'
 import {xm_name} from '@/config'
 import { saveAs } from 'file-saver'
 const api = {
+  add_use:()=> axios.post(`/api/add_use`),
   upload: (file, filetype = '') => {
   const formData = new FormData()
   formData.append('file', file)
