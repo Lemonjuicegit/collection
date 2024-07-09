@@ -3,7 +3,6 @@ import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import router from './router'
 import permissions from './directive/permissions'
-// import {useStore} from './stores/store' 
 import './style.css'
 import App from './App.vue'
 const app = createApp(App)

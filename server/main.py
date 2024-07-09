@@ -1,5 +1,5 @@
 import json,importlib,traceback
-from fastapi import FastAPI,Request, UploadFile,File,BackgroundTasks
+from fastapi import FastAPI, Query,Request, UploadFile,File,BackgroundTasks
 from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
@@ -7,17 +7,18 @@ from fastapi.responses import JSONResponse
 from readMenuitemURL import config
 from routers import store,unzip,log,use,Api,get_tbbh,state
 from fastapiUtils import include_router,split_args,cell_return
-from package.interface.setup import getFunc
+from package.interface.setup import getFunc,setArgs
+
 static_dir_absolute = f"{config.cwdpath}\\static"
 manage_dir_absolute = f"{config.cwdpath}\\manage"
 home_dir_absolute = f"{config.cwdpath}\\home"
 assets_dir_absolute = f"{config.cwdpath}\\static\\assets"
 
-environment = 0
+environment = 1
 
 if environment:
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
-    app.mount("/assets", StaticFiles(directory=assets_dir_absolute), name="assets")
+    # app.mount("/assets", StaticFiles(directory=assets_dir_absolute), name="assets")
     app.mount("/home", StaticFiles(directory=home_dir_absolute, html=True), name="home")
     for router in config.routerName:
         app.mount(f"/{router}", StaticFiles(directory=static_dir_absolute, html=True), name=router)
@@ -83,34 +84,35 @@ async def create_upload_file(file:UploadFile=File(),filetype:str='', req: Reques
     file_content = await file.read()
     filename = file.filename
     extractpath = store.uploadPath / ip / filename
-    store.addUseFile(ip,store.uploadPath, filename)
+    center_id = store.addUseFile(ip,store.uploadPath, filename)
+    res = {"center_file_id":center_id,"engender":[]}
     with open(extractpath, "wb") as buffer:
         buffer.write(file_content)
     if filetype == 'gdb':
         unzip(extractpath, store.uploadPath / ip)
-        store.addUseFile(ip,store.uploadPath, f"{filename.split('.')[0]}.gdb")
-        return filename
+        engender = store.addUseFile(ip,store.uploadPath, f"{filename.split('.')[0]}.gdb")
+        res["engender"] = engender
+        return res
     if filetype == 'zip':
         namelist = unzip(extractpath, store.uploadPath / ip / file.filename)
         for f in namelist:
-            store.addUseFile(ip,store.uploadPath, f)
+            res["engender"].append(store.addUseFile(ip,store.uploadPath, f))
     elif filetype == 'shp':
         filelist = unzip(extractpath, store.uploadPath / ip)
         for f in filelist:
-            store.addUseFile(ip,store.uploadPath, f)
-    return filename
+            res["engender"].append(store.addUseFile(ip,store.uploadPath, f))
+    return res
 
 @app.post(f"{rewrite}/download")
 async def create_download_file(fileid,isdel, req: Request,task:BackgroundTasks):
     ip = req.client.host
     log.info("create_download_file:%s",ip)
     # 查找要下载的文件
-    path = store.file_id(fileid,'all')
-
+    path = store.file_id(fileid,'path')
     if int(isdel):
         task.add_task(store.drop_query,f"ID == '{fileid}'")
-    if path.shape[0]:
-        return FileResponse(path.path.values[0], filename=path.filename.values[0])
+    if path:
+        return FileResponse(path, filename=path.name)
     return state.ERR
 
 @app.post(f"{rewrite}/getmenuitemURL")
@@ -167,47 +169,30 @@ async def upmenuitemURL(args: Args):
     config.upmenuitem()
     
 @app.post(f"{rewrite}/cell")
-async def cell(args:Args,req: Request=None):
+async def cell(args:Args,query=Query(None),req: Request=None):
     ip = req.client.host
     res = None
     func_item = getFunc(args.interArgs['id'])
-    imported_module = importlib.import_module(func_item['module'])
+    imported_module = importlib.import_module(f"{func_item['module']}.setup")
+    importlib.reload(imported_module)
     func = getattr(imported_module,func_item['name'])
     func_args = []
-    if args.interArgs['args']:
-        for k,v in enumerate(args.interArgs['args']):
-            match func_item['args'][k]:
-                case 'int':
-                    func_args.append(int(v))
-                case 'float':
-                    func_args.append(float(v))
-                case 'ip':
-                    func_args.append(ip)
-                case 'app':
-                    func_args.append(app)
-                case 'app':
-                    func_args.append(app)
-                case 'upload':
-                    func_args.append(store.uploadPath / ip / v)
-                case 'send':
-                    func_args.append(store.sendPath / ip / v)
-                case _:
-                    func_args.append(v)
-
+    if func_item['args']:
+        func_args = setArgs(func_item,args.interArgs,ip,app,store,query,req)
         if func_item['return']:
                 res = cell_return(func_item['return'],func,func_args,ip)
         else:
             func(*func_args)
     else:
         if func_item['return']:
-            res = cell_return(func_item['return'],func,func_args,ip)
+            res = cell_return(func_item['return'],func,[],ip)
         else:
-            func(*func_args)
-    return {"state":state.RES,"res":res}
-
+            func()
+    return {"state":state.END,"res":res}
 if __name__ == "__main__":
     import uvicorn
     if environment:
         uvicorn.run(app, host="192.168.2.139", port=45454)
     else:
         uvicorn.run(app, host="192.168.2.51", port=45454)
+        # uvicorn.run(app, host="127.0.0.0", port=45454)

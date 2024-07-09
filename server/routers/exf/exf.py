@@ -4,8 +4,7 @@ import os,json
 from .. import state
 current = Path(os.path.dirname(__file__))
 attributetab_path = current / 'attributetab.json'
-with open(attributetab_path,'r',encoding="utf-8") as f:
-    attributetab = json.loads(f.read())
+attributetab = json.loads(attributetab_path.read_text(encoding='utf-8'))
 def hc_exf(gdbfile,savepath):
     template_zd = current / 'template' / '合川区宗地.exf'
     template_fw = current / 'template' / '合川区房屋.exf'
@@ -64,11 +63,14 @@ def hc_exf(gdbfile,savepath):
         with open(f"{os.path.join(savepath,f'{bdcdyh}宗地')}.exf",'w',encoding='gbk') as f:
             f.write(text)
             yield state.RES,f"{bdcdyh}宗地.exf"
+    fields = attributetab['TGEOC_JC_HOUSE_5H']['fields']
+    hiatus_fiedl = set(fields) - set(gdf_fw)
+    if hiatus_fiedl:
+        yield state.ERR,f"房屋缺少字段:{list(hiatus_fiedl)}"
     for _,row in gdf_fw.iterrows():
         xy = row.geometry.geoms[0].exterior.xy
         xy_str = '\n'.join([f'{x}∴{y}∴100.000000' for x,y in zip(xy[0],xy[1])])
         xy_str = f"{len(xy[0])}\n{xy_str}"
-        fields = attributetab['TGEOC_JC_HOUSE_5H']['fields']
         arr = ''
         temp = []
         for field in fields:
@@ -77,41 +79,6 @@ def hc_exf(gdbfile,savepath):
             else:
                 temp.append('')
         arr = '∴'.join([str(v) for v in temp])
-        # FID = row['FID'] if row['FID'] else 0.0
-        # F_CODE_ID = row['F_CODE_ID'] if row['F_CODE_ID'] else ''
-        # F_TEMP_CODE = row['F_TEMP_CODE'] if row['F_TEMP_CODE'] else ''
-        # F_TEMP_NAME = row['F_TEMP_NAME'] if row['F_TEMP_NAME'] else ''
-        # F_UNDER_CORNERID = row['F_UNDER_CORNERID'] if row['F_UNDER_CORNERID'] else ''
-        # F_OBJECT_NAME = row['F_OBJECT_NAME'] if row['F_OBJECT_NAME'] else ''
-        # F_PARCEL_ID = row['F_PARCEL_ID'] if row['F_PARCEL_ID'] else ''
-        # F_UNDER_PARCEL_NO = row['F_UNDER_PARCEL_NO'] if row['F_UNDER_PARCEL_NO'] else ''
-        # bdcdydm = row['不动产单元代码'] if row['不动产单元代码'] else ''
-        # F_BASE_AREA = row['F_BASE_AREA'] if row['F_BASE_AREA'] else ''
-        # F_CALCULATE_AREA = row['F_CALCULATE_AREA'] if row['F_CALCULATE_AREA'] else ''
-        # F_CREATE_BY = row['F_CREATE_BY'] if row['F_CREATE_BY'] else ''
-        # F_CREATE_TIME = row['F_CREATE_TIME'] if row['F_CREATE_TIME'] else ''
-        # F_MODIFY_BY = row['F_MODIFY_BY'] if row['F_MODIFY_BY'] else ''
-        # F_MODIFY_TIME = row['F_MODIFY_TIME'] if row['F_MODIFY_TIME'] else ''
-        # F_SERIAL_NO = row['F_SERIAL_NO'] if row['F_SERIAL_NO'] else ''
-        # F_BUILDING_TYPE = row['F_BUILDING_TYPE'] if row['F_BUILDING_TYPE'] else ''
-        # F_BUILDING_STOREY = row['F_BUILDING_STOREY'] if row['F_BUILDING_STOREY'] else ''
-        # F_BUILDING_NO = row['F_BUILDING_NO'] if row['F_BUILDING_NO'] else ''
-        # F_COMMENT = row['F_COMMENT'] if row['F_COMMENT'] else ''
-        # F_LOCKED = row['F_LOCKED'] if row['F_LOCKED'] else ''
-        # F_SITE_ID = row['F_SITE_ID'] if row['F_SITE_ID'] else ''
-        # F_BLOCK = row['F_BLOCK'] if row['F_BLOCK'] else ''
-        # F_BUILDING_NO_OLD = row['F_BUILDING_NO_OLD'] if row['F_BUILDING_NO_OLD'] else ''
-        # ID = row['ID'] if row['ID'] else ''
-        # CODE = row['CODE'] if row['CODE'] else ''
-        
-        # arr = f"{FID}∴{F_CODE_ID}∴{F_TEMP_CODE}∴{F_TEMP_NAME}∴{F_UNDER_CORNERID}∴{F_OBJECT_NAME}∴{F_PARCEL_ID}" + \
-        #     f"∴{F_UNDER_PARCEL_NO}∴{bdcdydm}∴{F_BASE_AREA}∴{F_CALCULATE_AREA}∴{F_CREATE_BY}∴{F_CREATE_TIME}" + \
-        #     f"∴{F_MODIFY_BY}∴{F_MODIFY_TIME}∴{F_SERIAL_NO}∴{F_BUILDING_TYPE}∴{F_BUILDING_STOREY}∴{F_BUILDING_NO}" + \
-        #     f"∴{F_COMMENT}∴{F_LOCKED}∴{F_SITE_ID}∴{F_BLOCK}∴{F_BUILDING_NO_OLD}∴1∴{CODE}"
-        # arr = f"{FID}∴{F_CODE_ID}∴{F_TEMP_CODE}∴{F_TEMP_NAME}∴∴∴" + \
-        #     f"∴∴∴∴∴∴" + \
-        #     f"∴∴∴∴∴∴" + \
-        #     f"∴∴∴∴∴∴1∴{CODE}"
         temp1 = '\n'.join(fw[:1054])
         temp2 = '\n'.join(fw[1054:1106])
         temp3 = '\n'.join(fw[1107:])

@@ -5,8 +5,8 @@ import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-// let ip = 'http://192.168.2.51:45454/'
-let ip = 'http://192.168.2.139:45454/'
+let ip = 'http://192.168.2.51:45454/'
+// let ip = 'http://192.168.2.139:45454/'
 
 export default defineConfig({
   base: './',

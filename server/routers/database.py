@@ -1,8 +1,7 @@
 from sqlite3 import connect
-import uuid,os
-import pandas as pd
-from pathlib import Path
-from . import store
+import uuid
+
+serverip = "183.71.245.98:45454"
 
 cnn = connect('db.sqlite3')
 cursor = cnn.cursor()
@@ -30,7 +29,12 @@ cursor = cnn.cursor()
 
 def search_picture(zj:list[str]):
     picture_data = {"title":"耕地非粮化举证","permissions":0,"data":[]}
-    for v in zj:
+    if zj[0] == "all":
+        zj_all = list(cursor.execute("SELECT XZQDM FROM SPB_XZQDM"))
+        zj_all = [v[0] for v in zj_all]
+    else:
+        zj_all = zj
+    for v in zj_all:
         res = list(cursor.execute(f"SELECT ZJMC FROM SPB_XZQDM WHERE XZQDM = '{v}'"))
         if not res:
             return picture_data
@@ -43,13 +47,13 @@ def search_picture(zj:list[str]):
                 temp[row[2]] = [{
                     "title": row[4],
                     "name": row[0],
-                    "URL": f"http://{store.serverip}/{row[2]}/{row[4]}",
+                    "URL": f"http://{serverip}/{row[2]}/{row[4]}",
                 }]
             else:
                 temp[row[2]].append({
                     "title": row[4],
                     "name": row[0],
-                    "URL": f"http://{store.serverip}/{row[2]}/{row[4]}",
+                    "URL": f"http://{serverip}/{row[2]}/{row[4]}",
                 })
         picture_data["data"][len(picture_data["data"])-1]["children"] = [
             {
@@ -62,8 +66,7 @@ def search_picture(zj:list[str]):
             } for key,value in temp.items()]
     
     return picture_data
-    
-    
+   
 def get_tbbh():
     res = cursor.execute("SELECT TBBH FROM GD_FLH_picture")
     TBBH = []
@@ -71,5 +74,3 @@ def get_tbbh():
         TBBH.append(row[0])
     return TBBH
     
-if __name__ == '__main__':
-    get_tbbh()

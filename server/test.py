@@ -1,4 +1,4 @@
-from package.coordinateStr import test
+from package.test import add
 
 
 print(test)
