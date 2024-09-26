@@ -4,9 +4,9 @@ from pathlib import Path
 from shapely import Point,Polygon,MultiPolygon
 
 class gardens:
-    def __init__(self,jd,shppath,templaet) -> None:
+    def __init__(self,jd,shppath,templaet:Path) -> None:
         self.gdf = gpd.read_file(shppath)
-        self.temp_path = Path(templaet)
+        self.temp_path = templaet
         self.temp = self.temp_path.read_text(encoding="gb2312").rpartition('\n')
         self.temp_head = self.temp[0]
         self.temp = self.temp[2].split(',')
@@ -91,6 +91,7 @@ class gardens:
                     f.write(f"{item.JZDH},{item.xh},{round(item.geometry.y,2)},{round(item.geometry.x,2)}\n")
 
             self.gdf.apply(coordinate,axis=1)
+            return save
             
 def readData(path,save):
     with open(path, 'r', encoding='gb2312') as f:
@@ -111,3 +112,7 @@ def readData(path,save):
             n+=1
 
     gdf.to_file(save,encoding='gb18030')
+    
+if __name__ == '__main__':
+    gar = gardens(r'E:\工作文档\其他\坐标串20250627\节点.shp',r'E:\工作文档\其他\坐标串20250627\大足区高坪镇等（6）个镇低效园林地开发项目15个.shp',r'E:\工作文档\其他\坐标串20250627\模板.txt')
+    gar.get_coordinate_string(r'E:\工作文档\其他\坐标串20250627\大足区高坪镇等（6）个镇低效园林地开发项目15个.txt')

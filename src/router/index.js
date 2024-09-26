@@ -1,7 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import DIframe from '@/views/DIframe.vue'
 import Dexf from '@/views/Dexf.vue'
-import Test from '@/views/Test.vue'
 const routes = [
   {
     path: '/iframe',

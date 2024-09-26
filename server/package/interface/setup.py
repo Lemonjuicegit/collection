@@ -1,4 +1,5 @@
 import json
+from typing import Any, List
 from pathlib import Path
 from typing import List
 from uuid import uuid4
@@ -36,13 +37,43 @@ def getFunc(select_id: List[int]):
         else:
             res = res['children'][int(index)]
     return res
-    
-def upInterface(interface_str):
-    pass
-    
-      
+
+def upInterface(inter_json):
+    with open(cwdpath, 'w',encoding='utf-8') as f:
+        f.write(json.dumps({"interface":inter_json}))
+        
+def setArgs(func_item,interArgs,ip,app,store,query,req)-> List[Any]:
+    func_args = []
+    n = 0 # 记录已取得第几个服务端参数
+    for k,v in enumerate(func_item['args']):
+        match v:
+            case 'int':
+                func_args.append(int(interArgs['args'][n]))
+                n += 1
+            case 'float':
+                func_args.append(float(interArgs['args'][n]))
+                n += 1
+            case 'ip':
+                func_args.append(ip)
+            case 'query':
+                func_args.append(query)
+            case 'app':
+                func_args.append(app)
+            case 'req':
+                func_args.append(req)
+            case 'upload':
+                func_args.append(store.uploadPath / ip / interArgs['args'][n])
+                n += 1
+            case 'send':
+                func_args.append(store.sendPath / ip / interArgs['args'][n])
+                n += 1
+            case _:
+                func_args.append(interArgs['args'][k])
+                n += 1
+    return func_args
+
+
 if __name__ == '__main__':
     # Select_id()
     getFunc('3')
-     
-        
+      

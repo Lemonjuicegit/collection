@@ -72,7 +72,6 @@ main {
     height: calc(100% - 50px);
     margin: 10px 10px 10px 10px;
     border-radius: 5px;
-    box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.3);
     overflow-y: scroll
 }
 

@@ -7,5 +7,6 @@ from .Api import Api
 from .Use import use
 from .utils import *
 from .Add import add
+from .log import logger
 
 log = createlog('\\'.join(__file__.split("\\")[:-2]))

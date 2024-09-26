@@ -13,7 +13,8 @@ export const useStore = defineStore('store', {
       edititle: false, // 时候编辑名字
       expandNode: [], // 左侧菜单节点展开
       url: '',
-      permissions:0,
+      permissions: 0,
+      laftSideWidth: 200,
     }
     return data
   },
