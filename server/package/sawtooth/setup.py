@@ -44,8 +44,7 @@ def sawtooth_xy(xy,por,ignore:int):
             outer_coords.append(mid)
     
     return outer_coords,0
-        
-   
+
 def sawtooth_pol(por,tbbh):
     inner_coords = []
     xy = list(zip(por.exterior.xy[0],por.exterior.xy[1]))

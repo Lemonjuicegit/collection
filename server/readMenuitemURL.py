@@ -1,12 +1,12 @@
 import json,os
 from pathlib import Path
+from package.utils import re_json
 class Config:
     def __init__(self) -> None:
         # self.cwdpath = r"E:\exploitation\collection\server"
         self.cwdpath = os.getcwd()
         self.path = Path(f"{self.cwdpath}\\menuitemURL.json")
-        with open(f"{self.cwdpath}\\menuitemURL.json", 'r',encoding='utf-8') as f:
-            self.menuitemURL = json.loads(f.read())
+        self.menuitemURL = re_json(self.path)
         self.routerName = list(self.menuitemURL)
         self.routerName = list(filter(lambda x:x not in ['utils'],self.routerName))
         self.re_routerName = []

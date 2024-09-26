@@ -67,7 +67,7 @@ class gardens:
         self.gdf.apply(shan,axis=1)
         self.delgdf['geometry'] = self.delgdf['geometry'].apply(lambda geom: geom.zxy if geom.has_z else geom)
         self.delgdf.to_file(save,encoding='gb18030')         
-    def  get_coordinate_string(self,save):
+    def  get_coordinate_string(self,save,ndigits=2):
         with open(save,"a",encoding='gb2312') as f:
             f.write(f"{self.temp_head}\n")
             def coordinate(row):
@@ -88,7 +88,7 @@ class gardens:
                 att = f"{att}\n"
                 f.write(att)
                 for _,item in por.iterrows():
-                    f.write(f"{item.JZDH},{item.xh},{round(item.geometry.y,2)},{round(item.geometry.x,2)}\n")
+                    f.write(f"{item.JZDH},{item.xh},{round(item.geometry.y,ndigits)},{round(item.geometry.x,ndigits)}\n")
 
             self.gdf.apply(coordinate,axis=1)
             
@@ -111,3 +111,13 @@ def readData(path,save):
             n+=1
 
     gdf.to_file(save,encoding='gb18030')
+    
+if __name__ == '__main__':
+    path_ = r'E:\工作文档\测试导出数据\0923'
+    jd = fr'{path_}\jd.shp'
+    shp = fr'{path_}\万古27预检后365亩.shp'
+    temp = fr'{path_}\新增模板(2).txt'
+    save = fr'{path_}\万古27预检后365亩.txt'
+    gar = gardens(jd,shp,temp)
+    # gar.delJd(0.1,'DKBH',fr'{path_}\删除点.shp')
+    gar.get_coordinate_string(save,3)

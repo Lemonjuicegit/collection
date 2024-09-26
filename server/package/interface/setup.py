@@ -2,8 +2,6 @@ import json
 from typing import Any, List
 from pathlib import Path
 from typing import List
-from uuid import uuid4
-
 cwdpath = Path(__file__).parent / "interface.json"
 
 interface_json = json.loads(cwdpath.read_text(encoding="utf-8"))
@@ -11,7 +9,7 @@ interface_json = json.loads(cwdpath.read_text(encoding="utf-8"))
 
 def getInterface():
     interface_data = json.loads(cwdpath.read_text(encoding="utf-8"))
-    return interface_data['interface']
+    return interface_data["interface"]
 
 def Select_id():
     def recursion(children,depth='',result=None):
@@ -43,26 +41,29 @@ def upInterface(inter_json):
         f.write(json.dumps({"interface":inter_json}))
         
 def setArgs(func_item,interArgs,ip,app,store,query,req)-> List[Any]:
+    args_dict = {
+        'ip':ip,
+        'app':app,
+        'store':store,
+        'query':query,
+        'req':req,
+    }
     func_args = []
     n = 0 # 记录已取得第几个服务端参数
     for k,v in enumerate(func_item['args']):
         match v:
+            case x if x in args_dict.keys():
+                func_args.append(args_dict[x])
             case 'int':
                 func_args.append(int(interArgs['args'][n]))
                 n += 1
             case 'float':
                 func_args.append(float(interArgs['args'][n]))
                 n += 1
-            case 'ip':
-                func_args.append(ip)
-            case 'query':
-                func_args.append(query)
-            case 'app':
-                func_args.append(app)
-            case 'req':
-                func_args.append(req)
             case 'upload':
-                func_args.append(store.uploadPath / ip / interArgs['args'][n])
+                func_args.append(
+                    store.uploadPath / ip / store.file_id(interArgs["args"][n], "path")
+                )
                 n += 1
             case 'send':
                 func_args.append(store.sendPath / ip / interArgs['args'][n])
@@ -72,7 +73,7 @@ def setArgs(func_item,interArgs,ip,app,store,query,req)-> List[Any]:
                 n += 1
     return func_args
 
-
+     
 if __name__ == '__main__':
     # Select_id()
     getFunc('3')

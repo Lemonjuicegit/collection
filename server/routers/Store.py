@@ -18,7 +18,7 @@ class Store:
         self.uploadPath = Path(self.cwdpath) / 'upload'
         self.sendPath = Path(self.cwdpath) / 'send'
         self.serverip = "183.71.245.98:45454"
-    
+  
     def addUseFile(self,ip ,directory:Path,filename: str):
         """
         Args:
@@ -57,7 +57,7 @@ class Store:
         if not res.shape[0]:
             return None
         if fiedl:
-            res = res[fiedl].values[0]        
+            res = res[fiedl].values[0]
         return res   
 
     def query(self,where,field=""):

@@ -14,7 +14,7 @@ def del_near_point(xy,accuracy):
             extXY.append(mid)
     extXY.append(extXY[0])
     return extXY
-def nearPoint(data:Path,accuracy:Union[int, float],save:Union[Path,str]):
+def nearPoint(data:Path,accuracy:float,save:Path):
     gdf = gpd.read_file(data)
     delgdf = gpd.GeoDataFrame(columns=gdf.columns)
     
@@ -37,9 +37,12 @@ def nearPoint(data:Path,accuracy:Union[int, float],save:Union[Path,str]):
             delgdf.loc[delgdf.shape[0]] = [*row[:-1],Polygon(extXY)]
 
     gdf.apply(shan,axis=1)
-    # delgdf = delgdf.set_geometry('geometry')
-    # delgdf.crs = gdf.crs
+    delgdf = delgdf.set_geometry('geometry')
+    delgdf.crs = gdf.crs
     delgdf.to_file(save,encoding='gb18030',crs=gdf.crs)
+    stem = save.stem
+    
+    return sorted(save.parent.glob(f"{stem}.*"))
     
 if __name__ == '__main__':
     datapath = Path(r'E:\工作文档\测试导出数据\删点测试.shp')

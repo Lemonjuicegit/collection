@@ -67,7 +67,7 @@ class gardens:
         self.gdf.apply(shan,axis=1)
         self.delgdf['geometry'] = self.delgdf['geometry'].apply(lambda geom: geom.zxy if geom.has_z else geom)
         self.delgdf.to_file(save,encoding='gb18030')         
-    def  get_coordinate_string(self,save):
+    def get_coordinate_string(self, save, precision):
         with open(save,"a",encoding='gb2312') as f:
             f.write(f"{self.temp_head}\n")
             def coordinate(row):
@@ -88,7 +88,9 @@ class gardens:
                 att = f"{att}\n"
                 f.write(att)
                 for _,item in por.iterrows():
-                    f.write(f"{item.JZDH},{item.xh},{round(item.geometry.y,2)},{round(item.geometry.x,2)}\n")
+                    f.write(
+                        f"{item.JZDH},{item.xh},{round(item.geometry.y,precision)},{round(item.geometry.x,precision)}\n"
+                    )
 
             self.gdf.apply(coordinate,axis=1)
             return save
@@ -114,5 +116,10 @@ def readData(path,save):
     gdf.to_file(save,encoding='gb18030')
     
 if __name__ == '__main__':
-    gar = gardens(r'E:\工作文档\其他\坐标串20250627\节点.shp',r'E:\工作文档\其他\坐标串20250627\大足区高坪镇等（6）个镇低效园林地开发项目15个.shp',r'E:\工作文档\其他\坐标串20250627\模板.txt')
-    gar.get_coordinate_string(r'E:\工作文档\其他\坐标串20250627\大足区高坪镇等（6）个镇低效园林地开发项目15个.txt')
+    savepath = r"E:\工作文档\测试导出数据\0913"
+    gar = gardens(
+        rf"{savepath}\节点.shp",
+        rf"{savepath}\万古27导坐标.shp",
+        Path(rf"{savepath}\新增模板.txt"),
+    )
+    gar.get_coordinate_string(rf"{savepath}\万古27.txt", 2)

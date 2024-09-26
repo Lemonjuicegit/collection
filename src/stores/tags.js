@@ -3,12 +3,7 @@ import { xm_name } from '@/config'
 
 export const useTagsStore = defineStore('tags', {
   state: () => {
-    let data = {}
-    data[xm_name] = {
-      list: [],
-      active: '',
-    }
+    const data = { list: [], active: '' }
     return data
-  },
-  persist: true,
+  }
 })
