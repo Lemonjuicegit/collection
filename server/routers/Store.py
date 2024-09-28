@@ -27,6 +27,7 @@ class Store:
             filename (str): 带后缀的文件名
         """
         file_id = str(uuid4())
+        file_id = str(uuid4())
         self.useFile.loc[self.useFile.shape[0]] = [
             ip,
             directory/ip,
@@ -35,7 +36,9 @@ class Store:
             filename.split(".")[1],
             filename.split(".")[0],
             file_id,
+            file_id,
         ]
+        return file_id
         return file_id
     def drop_query(self,where):
         """删除文件并返回一个空列表"""
@@ -61,7 +64,14 @@ class Store:
         return res   
 
     def query(self,where,field=""):
+    def query(self,where,field=""):
         res = self.useFile.query(where)
+        if not res.shape[0]:
+            return None
+        if field:
+            res = res[field].values[0]
+        return res
+        
         if not res.shape[0]:
             return None
         if field:

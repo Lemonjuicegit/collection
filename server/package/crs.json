@@ -3,7 +3,7 @@
     "EPSG": "4523",
     "投影": "Gauss-Kruger"
   },
-    "CGCS2000_3_36": {
+  "CGCS2000_3_36": {
     "EPSG": "4524",
     "投影": "Gauss-Kruger"
   }
