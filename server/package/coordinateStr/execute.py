@@ -1,125 +1,161 @@
 import math
 import geopandas as gpd
 from pathlib import Path
-from shapely import Point,Polygon,MultiPolygon
+from shapely import Point, Polygon, MultiPolygon
+
 
 class gardens:
-    def __init__(self,jd,shppath,templaet:Path) -> None:
+    def __init__(self, jd, shppath, templaet: Path) -> None:
         self.gdf = gpd.read_file(shppath)
         self.temp_path = templaet
-        self.temp = self.temp_path.read_text(encoding="gb2312").rpartition('\n')
+        self.temp = self.temp_path.read_text(encoding="gb2312").rpartition("\n")
         self.temp_head = self.temp[0]
-        self.temp = self.temp[2].split(',')
+        self.temp = self.temp[2].split(",")
+
         def filter_key(item):
             if len(item) > 0:
-                if item[0] == '#':
+                if item[0] == "#":
                     return item
-        self.key_field = list(filter(filter_key,self.temp))[0][1:]
+
+        self.key_field = list(filter(filter_key, self.temp))[0][1:]
         self.getJd(jd)
-        self.delgdf = gpd.GeoDataFrame(columns=['dkh','geometry'],crs=self.gdf.crs)
-    def getJd(self,save):
-        self.jd = gpd.GeoDataFrame(columns=['dkh','xh','JZDH','geometry'],crs=self.gdf.crs)
+        self.delgdf = gpd.GeoDataFrame(columns=["dkh", "geometry"], crs=self.gdf.crs)
+
+    def getJd(self, save):
+        self.jd = gpd.GeoDataFrame(
+            columns=["dkh", "xh", "JZDH", "geometry"], crs=self.gdf.crs
+        )
+
         def coordinate(row):
             if type(row.geometry) == MultiPolygon:
                 por = row.geometry.geoms[0]
             else:
                 por = row.geometry
-            xy = list(zip(por.exterior.xy[0],por.exterior.xy[1]))
+            xy = list(zip(por.exterior.xy[0], por.exterior.xy[1]))
             n = 1
             for i in xy:
                 if n == len(xy):
-                    self.jd.loc[self.jd.shape[0]] = [row[self.key_field],'1',"J1",Point(i[0],i[1])]
+                    self.jd.loc[self.jd.shape[0]] = [
+                        row[self.key_field],
+                        "1",
+                        "J1",
+                        Point(i[0], i[1]),
+                    ]
                 else:
-                    self.jd.loc[self.jd.shape[0]] = [row[self.key_field],'1',f"J{n}",Point(i[0],i[1])]
+                    self.jd.loc[self.jd.shape[0]] = [
+                        row[self.key_field],
+                        "1",
+                        f"J{n}",
+                        Point(i[0], i[1]),
+                    ]
                     n += 1
             max_n = n
             if por.interiors:
                 xh = 2
                 for lin in por.interiors:
-                    interiors_xy =  list(zip(lin.xy[0],lin.xy[1]))
+                    interiors_xy = list(zip(lin.xy[0], lin.xy[1]))
                     for i in interiors_xy:
-                        if (n - max_n+1) == len(interiors_xy):
-                            self.jd.loc[self.jd.shape[0]] = [row[self.key_field],str(xh),f"J{max_n}",Point(i[0],i[1])]
+                        if (n - max_n + 1) == len(interiors_xy):
+                            self.jd.loc[self.jd.shape[0]] = [
+                                row[self.key_field],
+                                str(xh),
+                                f"J{max_n}",
+                                Point(i[0], i[1]),
+                            ]
                         else:
-                            self.jd.loc[self.jd.shape[0]] = [row[self.key_field],str(xh),f"J{n}",Point(i[0],i[1])]
+                            self.jd.loc[self.jd.shape[0]] = [
+                                row[self.key_field],
+                                str(xh),
+                                f"J{n}",
+                                Point(i[0], i[1]),
+                            ]
                         n += 1
-                    xh +=1
-        self.gdf.apply(coordinate,axis=1)
-        self.jd.to_file(save,encoding='gb18030')
-    
-    def delJd(self,accuracy,field,save):
+                    xh += 1
+
+        self.gdf.apply(coordinate, axis=1)
+        self.jd.to_file(save, encoding="gb18030")
+
+    def delJd(self, accuracy, field, save):
         def shan(row):
-            sxy = [0,0]
-            xy = list(zip(row.geometry.exterior.xy[0],row.geometry.exterior.xy[1]))
+            sxy = [0, 0]
+            xy = list(zip(row.geometry.exterior.xy[0], row.geometry.exterior.xy[1]))
             n = 0
             catXY = []
             for i in xy:
                 if sxy[0]:
-                    lenth = math.sqrt((sxy[0]-i[0])**2+(sxy[1]-i[1])**2)
+                    lenth = math.sqrt((sxy[0] - i[0]) ** 2 + (sxy[1] - i[1]) ** 2)
                     if lenth > accuracy:
-                        catXY.append((i[0],i[1]))
+                        catXY.append((i[0], i[1]))
                 else:
-                    catXY.append((i[0],i[1]))
+                    catXY.append((i[0], i[1]))
                 sxy[0] = i[0]
                 sxy[1] = i[1]
                 n += 1
-            self.delgdf.loc[self.delgdf.shape[0]] = [row[field],Polygon(catXY)]
-        self.gdf.apply(shan,axis=1)
-        self.delgdf['geometry'] = self.delgdf['geometry'].apply(lambda geom: geom.zxy if geom.has_z else geom)
-        self.delgdf.to_file(save,encoding='gb18030')         
+            self.delgdf.loc[self.delgdf.shape[0]] = [row[field], Polygon(catXY)]
+
+        self.gdf.apply(shan, axis=1)
+        self.delgdf["geometry"] = self.delgdf["geometry"].apply(
+            lambda geom: geom.zxy if geom.has_z else geom
+        )
+        self.delgdf.to_file(save, encoding="gb18030")
+
     def get_coordinate_string(self, save, precision):
-        with open(save,"a",encoding='gb2312') as f:
+        with open(save, "a", encoding="gb2312") as f:
             f.write(f"{self.temp_head}\n")
+
             def coordinate(row):
                 dkh = row[self.key_field]
-                por = self.jd[self.jd['dkh'] == dkh]
-                att = ''
+                por = self.jd[self.jd["dkh"] == dkh]
+                att = ""
                 for t in self.temp:
                     if len(t) > 0:
-                        if t[0] in ['$','#']:
+                        if t[0] in ["$", "#"]:
                             att = f"{att},{row[t[1:]]}" if att else row[t[1:]]
                             continue
-                        if t == '&index':
-                            att = f"{att},{len(por)-1}" if att else str(len(por)-1)
+                        if t == "&index":
+                            att = f"{att},{len(por)-1}" if att else str(len(por) - 1)
                             continue
                         att = f"{att},{t}" if att else t
                     else:
                         att = f"{att}," if att else t
                 att = f"{att}\n"
                 f.write(att)
-                for _,item in por.iterrows():
+                for _, item in por.iterrows():
                     f.write(
                         f"{item.JZDH},{item.xh},{round(item.geometry.y,precision)},{round(item.geometry.x,precision)}\n"
                     )
 
-            self.gdf.apply(coordinate,axis=1)
+            self.gdf.apply(coordinate, axis=1)
             return save
-            
-def readData(path,save):
-    with open(path, 'r', encoding='gb2312') as f:
-        text = f.read().split('\n')
+
+
+def readData(path, save):
+    with open(path, "r", encoding="gb2312") as f:
+        text = f.read().split("\n")
     n = 0
-    gdf = gpd.GeoDataFrame(columns=('MJ','QLR','DJH','geometry'))
+    gdf = gpd.GeoDataFrame(columns=("MJ", "QLR", "DJH", "geometry"))
     zb = []
     while n < len(text):
-        temp = text[n].split(',') 
-        if temp[0][0] == 'J':
-            zb.append([float(temp[3]),float(temp[2])])
-            n+=1
+        temp = text[n].split(",")
+        if temp[0][0] == "J":
+            zb.append([float(temp[3]), float(temp[2])])
+            n += 1
         else:
             if zb:
-                temp2 = text[n-len(zb)-1].split(',')
-                gdf.loc[gdf.shape[0]] = [temp2[1],temp2[3],temp2[5],Polygon(zb)]
+                temp2 = text[n - len(zb) - 1].split(",")
+                gdf.loc[gdf.shape[0]] = [temp2[1], temp2[3], temp2[5], Polygon(zb)]
                 zb = []
-            n+=1
+            n += 1
 
-    gdf.to_file(save,encoding='gb18030')
-    
-if __name__ == '__main__':
-    savepath = r"E:\工作文档\测试导出数据\0913"
+    gdf.to_file(save, encoding="gb18030")
+
+
+if __name__ == "__main__":
+    savepath = r"E:\工作文档\测试导出数据\927"
+    shpname = "万古27导坐标192块"
     gar = gardens(
         rf"{savepath}\节点.shp",
-        rf"{savepath}\万古27导坐标.shp",
-        Path(rf"{savepath}\新增模板.txt"),
+        rf"{savepath}\{shpname}.shp",
+        Path(rf"{savepath}\新增模板(2).txt"),
     )
-    gar.get_coordinate_string(rf"{savepath}\万古27.txt", 2)
+    gar.get_coordinate_string(rf"{savepath}\{shpname}.txt", 2)

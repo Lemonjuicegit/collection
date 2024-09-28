@@ -39,6 +39,8 @@ send
 upload
 *.exf
 *.docx
+*.sqlite3
+*.sqlite
 static2
 home
 home2

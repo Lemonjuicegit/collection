@@ -8,7 +8,7 @@ sqlite_file_name = conf["database"]["server"]
 server = f"sqlite:///{sqlite_file_name}"
 
 connect_args = {"check_same_thread": False}
-engine = create_engine(server, echo=True, connect_args=connect_args)
+engine = create_engine(server, connect_args=connect_args)
 
 
 def craete_table():

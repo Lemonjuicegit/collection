@@ -7,6 +7,7 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    DDropdown: typeof import('./../components/DDropdown/index.vue')['default']
     DResult: typeof import('./../components/DResult.vue')['default']
     Dropdown: typeof import('./../components/Dropdown/index.vue')['default']
     DTabs: typeof import('./../components/DTabs/index.vue')['default']

@@ -12,7 +12,11 @@ const state = reactive({
 const dropOptions = (data) => [
   {
     label: '添加网址',
-    click: () => collAdd('dataItem', data)
+    click: () => collAdd('dataItem', data),
+    hidden: () => {
+      console.log(data)
+      return true
+    }
   },
   {
     label: '添加分组',
@@ -36,14 +40,6 @@ const handlNodeDrop = async (before, after, inner) => {
     data = { id: before.data.id, parent_name: after.data.parent_name }
   }
   await collEdit('dataItem', data)
-}
-
-const convert = (data) => {
-  return {
-    data,
-    name: data.name,
-    title: data.title
-  }
 }
 
 const onEditItem = (data) => {
@@ -94,7 +90,7 @@ const onColorChange = (data) => {
             @node-drop="handlNodeDrop"
           >
             <template #default="{ node, data }">
-              <MenuTag :option="convert(data)" v-model:color="data.color">
+              <MenuTag :name="data.name" :title="data.title" v-model:color="data.color">
                 <template #outside>
                   <div style="gap: 10px; display: flex; margin-left: 10px">
                     <div v-if="!data.is_group">

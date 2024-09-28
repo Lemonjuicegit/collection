@@ -1,49 +1,59 @@
 <script setup>
-import api from '@/api'
 import manage_api from '@/api/manage'
 import Dropdown from '@/components/Dropdown/index.vue'
 import useCollection from '@/hooks/useCollection'
 const { message } = useCollection()
-const state = reactive({
-  list: [],
-  percentage: 0
-})
-onMounted(async () => {
-  state.list = [
-    {
-      title: 'getPathList',
-      value: await api.eqPath('xm1')
-    },
-    {
-      title: 'getRouterList',
-      value: await manage_api.getRouterList()
-    }
-    // {
-    //   title: 'getDataTree',
-    //   value: await manage_api.getDataTree()
-    // }
-  ]
-})
 const onClick = () => {
   console.log('测试2')
   message('测试', async () => {
     console.log('测试')
   })
 }
+const defaultProps = {
+  children: 'children',
+  label: 'title',
+  name: 'name'
+}
+
+const state = reactive({
+  list: [
+    {
+      title: '节点1',
+      name: 'name',
+      testlist: [
+        {
+          title: '节点1-1',
+          hidden: true
+        },
+        {
+          title: '节点1-2',
+          hidden: true
+        }
+      ]
+    }
+  ],
+  percentage: 0
+})
+const onclick = (data) => {
+  console.log(data)
+}
 </script>
-<template>
-  <el-scrollbar height="1000px">
-    <div v-for="item in state.list">
-      <el-card>
-        <template #header>
-          <div class="card-header">
-            <span style="color: #79bbff">{{ item.title }}</span>
-          </div>
-        </template>
-        <p>{{ item.value }}</p>
-      </el-card>
-      <el-button @click="onClick">测试</el-button>
-    </div>
-  </el-scrollbar>
+<template :prop>
+  <el-dropdown trigger="click">
+    <slot>
+      <el-tag plain size="small" @click.stop="() => {}" effect="dark"><i-ep-edit-pen /> </el-tag>
+    </slot>
+    <template #dropdown>
+      <template>
+        <el-dropdown-menu>
+          <template v-for="item in state.list[0].testlist">
+            <el-dropdown-item v-if="item.hidden ? item.hidden : true" :command="item.title">
+              {{ item.title }}
+            </el-dropdown-item>
+          </template>
+        </el-dropdown-menu>
+      </template>
+    </template>
+  </el-dropdown>
 </template>
 <style lang="scss" scoped></style>

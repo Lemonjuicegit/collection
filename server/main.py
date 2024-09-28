@@ -16,7 +16,7 @@ manage_dir_absolute = f"{cwdpath}\\manage"
 home_dir_absolute = f"{cwdpath}\\home"
 assets_dir_absolute = f"{cwdpath}\\static\\assets"
 assets_manage_absolute = f"{cwdpath}\\manage\\assets"
-environment = 2
+environment = 0
 if environment:
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.mount(
@@ -142,77 +142,11 @@ async def create_download_file(fileid, isdel, req: Request, task: BackgroundTask
     return state.ERR
 
 
-# @app.post(f"{rewrite}/getmenuitemURL")
-# async def getmenuitemURL(args: Args):
-#     log.info(args.xm_name)
-#     try:
-#         return config.menuitemURL[args.xm_name]["data"]
-#     except KeyError:
-#         log.err(f"'{args.xm_name}'路径不存在")
+if environment:
 
-
-# @app.post(f"{rewrite}/addmenuitemURL")
-# async def addmenuitemURL(args: Args):
-#     config.menuitemURL[args.xm_name]["data"].append(args.menuitemURL)
-#     config.upmenuitem()
-
-
-# @app.post(f"{rewrite}/setmenuitemName")
-# async def setmenuitemName(args: Args):
-#     config.menuitemURL[args.xm_name]["data"][args.id]["title"] = args.menuitemName
-#     config.upmenuitem()
-
-
-# @app.post(f"{rewrite}/gettitle")
-# async def getTitle(args: Args):
-#     return config.menuitemURL[args.xm_name]["title"]
-
-
-# @app.post(f"{rewrite}/settitle")
-# async def setTitle(args: Args):
-#     config.menuitemURL[args.xm_name]["title"] = args.title
-#     config.upmenuitem()
-
-
-# @app.post(f"{rewrite}/getPermissions")
-# async def getPermissions(args: Args):
-#     return config.menuitemURL[args.xm_name]["permissions"]
-
-
-@app.post(f"{rewrite}/delmenuitemURL")
-async def remove(args: Args):
-    del config.menuitemURL[args.xm_name]["data"][args.id]
-    config.upmenuitem()
-
-
-@app.post(f"{rewrite}/revise_router")
-async def reviseRouter(args: Args):
-    temp = config.menuitemURL[args.routerName]
-    del config.menuitemURL[args.routerName]
-    config.menuitemURL[args.reviseRouterName] = temp
-    if args.reviseRouterName in config.re_routerName:
-        config.re_routerName.remove(args.reviseRouterName)
-    config.re_routerName.append(args.routerName)
-    app.mount(
-        f"/{args.reviseRouterName}",
-        StaticFiles(directory="static", html=True),
-        name=args.routerName,
-    )
-    config.upmenuitem()
-
-
-@app.post(f"{rewrite}/upmenuitemURL")
-async def upmenuitemURL(args: Args):
-    config.menuitemURL[args.xm_name]["data"] = args.data
-    config.upmenuitem()
-
-
-@app.get("/{xm_name}")
-async def getHtml(xm_name):
-    # with open(rf"{cwdpath}/manage/index.html", "a", encoding="utf-8") as f:
-    #     html = f.read()
-    print(xm_name)
-    return FileResponse(rf"{cwdpath}/manage/index.html")
+    @app.get("/{xm_name}")
+    async def getHtml(xm_name):
+        return FileResponse(rf"{cwdpath}/manage/index.html")
 
 
 async def cell(args: Args, query=Query(None), req: Request = None):

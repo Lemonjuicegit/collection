@@ -3,17 +3,14 @@ from joblib import Parallel, delayed
 from collections.abc import Iterable
 
 
-def parallel(callback, data, *args, core=-1):
-    jobs = 10000
-    bacth_size = max(1, (jobs + core - 1) // core)
+def parallel(data, callback, *args, core=12):
+    
     if isinstance(data, list):
-        result = Parallel(n_jobs=core, batch_size=bacth_size)(
+        result = Parallel(n_jobs=core)(
             delayed(callback)(i, *args) for i in np.array(data)
         )
     elif isinstance(data, Iterable):
-        result = Parallel(n_jobs=core, batch_size=bacth_size)(
-            delayed(callback)(i, *args) for i in data
-        )
+        result = Parallel(n_jobs=core)(delayed(callback)(i, *args) for i in data)
     else:
         raise TypeError("data must be list or Iterable")
     # result = np.array(result)

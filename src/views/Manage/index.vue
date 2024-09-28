@@ -17,6 +17,7 @@ onMounted(async () => {
   let dataTree = await api.getDataTree()
   state.dataTree = dataTree.data
   state.routerData = res.data
+  console.log(dataTree)
 })
 
 const routerData = computed(() => {
@@ -40,14 +41,19 @@ const handlMenuClick = (data) => {
     <template #aside-header>
       <div class="aside-header">
         <p class="aside-title">办公网址管理</p>
-        <el-button size="small" type="success" @click="collAdd('router', state.dataTree)"
-          >添加路由</el-button
-        >
+        <el-button size="small" type="success" @click="collAdd('router', state.dataTree)">
+          <i-ep-plus />
+        </el-button>
       </div>
     </template>
     <template #aside>
       <div v-for="(item, key) in routerData" :key="key" style="margin: 10px">
-        <MenuTag :option="item" :active="state.active" @menu-click="handlMenuClick">
+        <MenuTag
+          :name="item.name"
+          :title="item.title"
+          :active="state.active"
+          @menu-click="handlMenuClick"
+        >
           <template #interior>
             <el-button
               @click.stop="collDel({ del_type: 'router', item, dataTree: state.dataTree })"

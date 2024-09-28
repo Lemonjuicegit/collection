@@ -17,7 +17,7 @@ def getPointCloudXYZ(las_file: str | Path):
 def las_apply(las_file: str | Path, callback):
     las = laspy.read(las_file)
     for i in range(len(las.x)):
-        yield callback([las.x[i], las.y[i], las.z[i]])
+        return callback([las.x[i], las.y[i], las.z[i]])
 
 
 def las_density(xyz, gdf):
@@ -28,11 +28,10 @@ def las_density(xyz, gdf):
     return False
 
 
-def dask_apply(data, callback, args):
+def dask_apply(data, callback):
     dask_array = da.from_array(data)
-    lambda_square = lambda x: callback(x, *args)
-    vectorized_process_element = np.vectorize(lambda_square)
-    result_dask_array = dask_array.map_blocks(vectorized_process_element)
+    lambda_square = lambda x: callback(x)
+    result_dask_array = dask_array.map_blocks(lambda_square)
     result_array = result_dask_array.compute()
     return result_array
 
@@ -43,22 +42,24 @@ if __name__ == "__main__":
     files = Path(las_dir).glob("*.las")
     shp = r"E:\工作文档\万州区\鱼背山水库管理线及保护线shp\鱼背山水库.shp"
     gdf = gpd.read_file(shp)
-    las = laspy.read(list(files)[2])
-    np_xy = np.column_stack((np.array(las.x) + 36000000, np.array(las.y)))
 
-    def eq_poi(xy, shp_gdf):
-        if shp_gdf.contains(Point(*xy)):
-            return 1
-        return 0
+    # las = laspy.read(list(files)[2])
+    # np_xy = np.column_stack((np.array(las.x) + 36000000, np.array(las.y)))
+    def callback_(data):
+        res_ = ""
+        for zb in range(len(data)):
+            res_ += f"{round(zb[0]+36000000,2)},{round(zb[1],2)},{round(zb[2],2)}\n"
+        return res_
 
-    res = Parallel(n_jobs=12)(delayed(eq_poi)(i, gdf.loc[0].geometry) for i in np_xy)
+    def eq_poi(files_):
+        las = laspy.read(files_)
+        res_ = ""
+        for i in range(len(las.x)):
+            res_ += f"{round(las.x[i]+36000000,2)},{round(las.y[i],2)},{round(las.z[i],2)}\n"
+        return res_
 
-    # res = dask_apply(np_xy, eq_poi, [gdf.loc[0].geometry])
-    # contains = las_apply(list(files)[2], lambda x: las_density(x, gdf))
-    # for v in contains:
-    #     if v:
-    #         is_poi.append(v)
-    result_array = np.array(res)
-    gl = result_array[result_array == 1]
-    print(len(gl))
-    # density = gdf.area / len(is_poi)
+    # result_array = dask_apply(np.array([str(v) for v in files]), eq_poi)
+    with open(r"E:\工作文档\万州区\水资源\点云\点云2.xyz", "a") as f:
+        for i in files:
+            f.write(eq_poi(i))
+            print(i)

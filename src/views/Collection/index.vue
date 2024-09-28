@@ -1,15 +1,13 @@
 <script setup name="Collection">
-import { EditPen, Delete } from '@element-plus/icons-vue'
 import { useStore } from '@/stores/store'
 import { useTagsStore } from '@/stores/tags'
 import { editItemOptions, editGroup } from './formData'
-import { inArray, getDelId } from '@/utils'
+import { inArray } from '@/utils'
 import useCollection from '@/hooks/useCollection'
 import api from '@/api/manage'
 const { collAdd, collDel, collEdit } = useCollection()
 const store = useStore()
 const tagsStore = useTagsStore()
-// const router = useRouter()
 const container = ref(null)
 const props = defineProps({
   xm_name: { type: String, default: '' }
@@ -42,57 +40,31 @@ onMounted(async () => {
   document.title = store.router.title
 })
 
-// watch(dataItemTree, async (data) => {
-// await api.updataItemTree(data)
-// })
-
-const remove = (node, item) => {
-  collDel({ del_type: 'dataItem', item, dataItemModel: state.dataItemTree, node })
+const onTags = (item) => {
+  if (item) {
+    state.URL = item.URL
+  } else {
+    state.URL = ''
+  }
 }
 
-const onTagsClick = (item) => {
-  state.URL = item.URL
-}
-
-const closeTags = (curItem) => {
+const closeTagsAll = (curItem) => {
   tagsStore.list = curItem
 }
 
 const handleNodeClick = (data) => {
   // 节点点击
+  console.log(data)
   if (!data.is_group) {
-    // router.push({ name: 'iframe' })
     state.URL = data.URL
     tagsStore.active = data.name
     const isExist = inArray(tagsStore.list, (item) => item.name === data.name)
     if (!isExist) {
       tagsStore.list.push(data)
     }
-
-    // if (!store.menuitem[data.name]) {
-    //     store.menuitem[data.name] = true
-    //     store.urlarr.push(data)
-    // }
-    store.ediTabsValue = data.name
   }
 }
 
-const onAddNode = async (data) => {
-  // 添加子节点
-  const newChild = {
-    title: '新建节点',
-    URL: '',
-    path: '/iframe',
-    color: '#b3e19d',
-    parent_name: data.name,
-    router_name: store.router.name,
-    is_group: false
-  }
-  await api.add('dataItemController', newChild)
-  await RefreshData()
-  // data.children.push(newChild)
-  // state.dataItemTree = [...state.dataItemTree]
-}
 const handleExpand = (data) => {
   // 记录节点展开
   if (store.expandNode.indexOf(data.name) === -1) store.expandNode.push(data.name)
@@ -126,17 +98,7 @@ const onEditMenuItem = (data) => {
 const handleSubmit = async (data) => {
   await collEdit('dataItem', { id: data.id, title: data.title, URL: data.URL })
 }
-const onAddGroup = async (data) => {
-  let group = {
-    title: '新建分组',
-    color: '#79bbff',
-    parent_name: data.name ? data.name : 'top',
-    router_name: store.router.name,
-    is_group: true
-  }
-  await api.add('dataItemController', group)
-  await RefreshData()
-}
+
 const handleDragEnd = async (before, after, inner) => {
   let data = {}
   if (inner === 'inner') {
@@ -147,25 +109,10 @@ const handleDragEnd = async (before, after, inner) => {
   await collEdit('dataItem', data)
 }
 
-const onDropdownClick = (e) => {
-  e.stopPropagation()
+const onColorChange = (color) => {
+  collEdit('dataItem', { id: data.id, color })
 }
-const onColorChange = (data) => {
-  collEdit('dataItem', { id: data.id, color: data.color })
-}
-const undertint = (col) => {
-  // 浅色
-  let rgb = col.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
-  rgb = rgb
-    .slice(1, 4)
-    .map((item) => {
-      let num = parseInt(item, 16)
-      return Math.floor((255 - num) / 2) + num
-    })
-    .map((item) => item.toString(16).toUpperCase())
-    .join('')
-  return `#${rgb}`
-}
+
 const onMouseDown = (even) => {
   even.preventDefault()
   let iframe = document.querySelectorAll('iframe')
@@ -189,14 +136,31 @@ const onMouseUp = (e) => {
   }
   container.value.onmousemove = null
 }
-const dropOptions = () => [
+const dropOptions = (data, node) => [
   {
     label: '添加网址',
-    click: () => collAdd('dataItem', state.dataItemTree)
+    click: () => collAdd('dataItem', data),
+    hidden: () => {
+      console.log(data)
+      return data.is_group ? data.is_group : true
+    }
   },
   {
     label: '添加分组',
-    click: () => collAdd('groupItem', state.dataItemTree)
+    click: () => collAdd('groupItem', data),
+    hidden: () => (data.is_group ? data.is_group : true)
+  },
+  {
+    label: '修改',
+    click: () => onEditMenuItem(data),
+    hidden: () => (node ? true : false)
+  },
+  {
+    label: '删除',
+    click: () => {
+      collDel({ del_type: 'dataItem', item: data, dataItemModel: state.dataItemTree, node })
+    },
+    hidden: () => (node ? true : false)
   }
 ]
 </script>
@@ -206,14 +170,13 @@ const dropOptions = () => [
       <div class="aside" :style="{ width: `${store.laftSideWidth}px` }">
         <div class="aside-header">
           <h4 class="aside-title">{{ state.titleName }}</h4>
-          <Dropdown :option="dropOptions()" trigger="hover">
+          <Dropdown :option="dropOptions(state.dataItemTree)" trigger="hover">
             <el-button type="success" size="small"><i-ep-plus /></el-button>
           </Dropdown>
         </div>
         <el-scrollbar height="1000px">
           <el-tree
             :default-expanded-keys="store.expandNode"
-            node-key="name"
             style="height: 100%"
             :data="state.dataItemTree.dataItem"
             :props="defaultProps"
@@ -224,67 +187,21 @@ const dropOptions = () => [
             @node-collapse="handlCollapse"
           >
             <template #default="{ node, data }">
-              <div
-                :class="data.name === tagsStore.active ? 'node-item' : ''"
-                :style="{
-                  display: 'flex',
-                  width: '100%',
-                  padding: '3px 5px 3px 5px',
-                  backgroundColor: undertint(data.color),
-                  borderRadius: '10px'
-                }"
+              <MenuTag
+                :name="data.name"
+                :title="data.title"
+                :active="tagsStore.active"
+                v-model:color="data.color"
               >
-                <span
-                  :style="{
-                    paddingLeft: '10px',
-                    paddingRight: '10px',
-                    backgroundColor: data.color,
-                    borderRadius: '30px'
-                  }"
-                  >{{ node.label }}</span
-                >
-                <span style="width: 10px" />
-                <div style="margin-left: auto">
-                  <el-dropdown
-                    trigger="click"
-                    size="small"
-                    :index="data.name"
-                    :hide-on-click="false"
-                  >
-                    <el-tag
-                      :type="data.is_group ? 'success' : 'primary'"
-                      plain
-                      :color="data.color"
-                      @click="onDropdownClick"
-                      size="small"
-                      effect="dark"
-                    >
-                      <i-ep-edit-pen />
-                    </el-tag>
-                    <template #dropdown>
-                      <el-dropdown-menu>
-                        <el-dropdown-item @click="onEditMenuItem(data)">修改</el-dropdown-item>
-                        <div>
-                          <el-dropdown-item @click="remove(node, data)">删除</el-dropdown-item>
-                        </div>
-                        <div>
-                          <el-dropdown-item @click="onAddNode(data)" v-if="data.is_group"
-                            >添加网页</el-dropdown-item
-                          >
-                        </div>
-                        <div>
-                          <el-dropdown-item @click="onAddGroup(data)" v-if="data.is_group"
-                            >添加分组</el-dropdown-item
-                          >
-                        </div>
-                        <el-dropdown-item divided>
-                          <input type="color" v-model="data.color" @change="onColorChange(data)" />
-                        </el-dropdown-item>
-                      </el-dropdown-menu>
-                    </template>
-                  </el-dropdown>
-                </div>
-              </div>
+                <template #interior>
+                  <Dropdown
+                    :isEditColor="true"
+                    v-model:color="data.color"
+                    :option="dropOptions(data, node)"
+                    @color-change="onColorChange"
+                  />
+                </template>
+              </MenuTag>
             </template>
           </el-tree>
         </el-scrollbar>
@@ -296,16 +213,17 @@ const dropOptions = () => [
         <DTabs
           v-model:list="tagsStore.list"
           v-model:active="tagsStore.active"
-          @tags-click="onTagsClick"
-          @close-tags="closeTags"
+          @tags-click="onTags"
+          @close-tags="closeTagsAll"
+          @close="onTags"
         />
         <div class="content" style="height: 95%">
           <iframe
             :src="state.URL"
+            v-if="state.URL"
             frameborder="0"
             width="100%"
             height="100%"
-            name="iframe"
           ></iframe>
         </div>
       </div>

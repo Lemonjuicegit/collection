@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Dexf from '@/views/Dexf.vue'
-import api from '@/api'
 import manage_api from '@/api/manage'
 
 const routes = [
@@ -49,18 +48,11 @@ router.beforeEach(async (to) => {
     sessionStorage.setItem('user', JSON.stringify(res))
   }
   if (to.meta.requiresAuth) {
-    const path_list = await api.eqPath(to.params.xm_name)
+    const path_list = await manage_api.eqPath(to.params.xm_name)
     if (path_list.code === 200) {
       return true
     } else if (path_list.code === 403) {
-    } else {
-      return {
-        name: 'error',
-        params: {
-          code: path_list.code,
-          msg: path_list.msg
-        }
-      }
+      return { ame: 'error', params: { code: path_list.code, msg: path_list.msg } }
     }
   }
   return true

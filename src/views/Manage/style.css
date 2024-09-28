@@ -1,8 +1,15 @@
 .aside-header {
   display: flex;
-  justify-content: center;
+  font-size: larger;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
   padding: 5px 5px 5px 5px;
   font-weight: bolder;
+}
+
+.aside-title {
+  padding: 10px;
+  color: #000000;
+  text-align: left;
 }

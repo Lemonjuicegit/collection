@@ -22,32 +22,29 @@ const props = defineProps({
   }
 })
 const colorModel = defineModel('color')
-const emit = defineEmits(['dropdown-click'])
+const emit = defineEmits(['dropdown-click', 'color-change'])
 
-const onDropdownClick = () => {
-  emit('dropdown-click')
+const selectColor = () => {
+  emit('color-change', colorModel)
 }
-// onMounted(() => {
-//   console.log('colorModel', props.option)
-// })
+onMounted(() => {
+  console.log('props.option', props.option)
+})
 </script>
 <template>
-  <el-dropdown :trigger="props.trigger" :size="props.small" :hide-on-click="false">
+  <el-dropdown :trigger="props.trigger" :size="props.small">
     <slot>
-      <el-tag
-        type="primary"
-        plain
-        :color="props.color"
-        @click.stop="onDropdownClick"
-        size="small"
-        effect="dark"
+      <el-tag plain :color="colorModel" size="small" @click.stop="() => {}" effect="dark"
         ><i-ep-edit-pen />
       </el-tag>
     </slot>
     <template #dropdown>
       <el-dropdown-menu>
-        <template v-for="(item, index) in props.option" :key="index">
-          <el-dropdown-item @click.stop="item.click(item)">
+        <template v-for="item in props.option">
+          <el-dropdown-item
+            v-if="item.hidden ? item.hidden() : true"
+            @click.stop="item.click(item)"
+          >
             {{ item.label }}
           </el-dropdown-item>
         </template>

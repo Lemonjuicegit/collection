@@ -53,10 +53,15 @@ const closeTags = (index) => {
   list.value.splice(index, 1)
   if (active.value === delItem.name) {
     const item = list.value[index] ? list.value[index] : list.value[index - 1]
-    active.value = item.name
-    emit('close', item)
+    if (item) {
+      active.value = item.name
+      emit('close', item)
+    } else {
+      emit('close', null)
+      active.value = ''
+    }
   } else {
-    emit('close', 0)
+    emit('close', delItem)
   }
 }
 

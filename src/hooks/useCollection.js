@@ -53,7 +53,7 @@ const useCollection = () => {
         let routerRes = res.data[0]
         item[routerRes.name] = {
           ...routerRes,
-          data: []
+          dataItem: []
         }
       }
     },
