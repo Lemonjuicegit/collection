@@ -25,7 +25,6 @@ coverage
 /server/manage2
 /server/.vscode
 # Editor directories and files
-.vscode/*
 !.vscode/extensions.json
 .idea
 *.suo

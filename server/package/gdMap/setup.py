@@ -40,7 +40,7 @@ def point_poi(poi):
         "typecode",
         "shopinfo",
         "adname",
-        'timestamp',
+        "timestamp",
         "name",
         "location",
         "tel",
@@ -55,6 +55,7 @@ def point_poi(poi):
         point = Point(*v["location"].split(","))
         gdf.loc[len(gdf)] = [*[str(temp[key]) for key in fields[:-1]], point]
     return gdf
+
 
 def poi_concat(poi_file_path: List[Path | dict], save):
     merge_poi = {}
@@ -71,6 +72,7 @@ def poi_concat(poi_file_path: List[Path | dict], save):
                 merge_poi = poi_data
     res_gdf: gpd.GeoDataFrame = point_poi(merge_poi)
     res_gdf.to_file(save, encoding="gb18030")
+
 
 def getPlaceData_cll(shppath, types, save):
     gdf = gpd.read_file(shppath)
@@ -108,9 +110,11 @@ def geocoding(dz_data, save, save_excel, key):
     gdf.to_file(save, encoding="gb18030")
     data_df.to_excel(save_excel)
 
+
 def getPlaceURL(keywords, types, city, page, key):
     url = f"https://restapi.amap.com/v3/place/text?keywords={keywords}&types={types}&city={city}&offset=25&page={page}&key={key}&extensions=all"
     return url
+
 
 def getPoiJson(save, urlCallback):
     url = urlCallback(1)
@@ -124,6 +128,7 @@ def getPoiJson(save, urlCallback):
             merge_poi["pois"] = [*merge_poi["pois"], *res["pois"]]
         with open(save, "w", encoding="utf-8") as f:
             f.write(json.dumps(merge_poi, ensure_ascii=False))
+
 
 if __name__ == "__main__":
     getPoiJson(
