@@ -1,4 +1,4 @@
-from sqlmodel import select, delete
+from sqlmodel import select, delete, update
 
 
 class Service:
@@ -27,7 +27,13 @@ class Service:
         return res
 
     def update(self, data):
-        self.session.bulk_update_mappings(self.DO, data)
+        if not isinstance(data, list):
+            up_data = self.select({"id": data["id"]})[0]
+            for key, value in data.items():
+                if key != "id":
+                    setattr(up_data, key, value)
+        else:
+            self.session.bulk_update_mappings(self.DO, data)
         self.session.commit()
 
     def delete(self, ids: list[int]):

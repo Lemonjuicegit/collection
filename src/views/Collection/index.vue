@@ -86,15 +86,6 @@ const handlCollapse = (data) => {
   store.expandNode.splice(store.expandNode.indexOf(data.name), 1)
 }
 
-const onEditMenuItem = (data) => {
-  if (data.is_group) {
-    state.editOptions = editGroup
-  } else {
-    state.editOptions = editItemOptions
-  }
-  state.initFormData = data
-  editRouterDialog.value = true
-}
 const handleSubmit = async (data) => {
   await collEdit('dataItem', { id: data.id, title: data.title, URL: data.URL })
 }
@@ -107,10 +98,6 @@ const handleDragEnd = async (before, after, inner) => {
     data = { id: before.data.id, parent_name: after.data.parent_name }
   }
   await collEdit('dataItem', data)
-}
-
-const onColorChange = (color) => {
-  collEdit('dataItem', { id: data.id, color })
 }
 
 const onMouseDown = (even) => {
@@ -136,27 +123,42 @@ const onMouseUp = (e) => {
   }
   container.value.onmousemove = null
 }
+const hanldeColorChange = (color, data) => {
+  console.log('color', color)
+  collEdit('dataItem', { id: data.id, color })
+}
 const dropOptions = (data, node) => [
   {
     label: '添加网址',
+    name: 'addItem',
     click: () => collAdd('dataItem', data),
     hidden: () => {
-      console.log(data)
-      return data.is_group ? data.is_group : true
+      return data.is_group !== undefined ? data.is_group : true
     }
   },
   {
     label: '添加分组',
+    name: 'addGroup',
     click: () => collAdd('groupItem', data),
-    hidden: () => (data.is_group ? data.is_group : true)
+    hidden: () => (data.is_group !== undefined ? data.is_group : true)
   },
   {
     label: '修改',
-    click: () => onEditMenuItem(data),
+    name: 'edit',
+    click: () => {
+      if (data.is_group) {
+        state.editOptions = editGroup
+      } else {
+        state.editOptions = editItemOptions
+      }
+      state.initFormData = data
+      editRouterDialog.value = true
+    },
     hidden: () => (node ? true : false)
   },
   {
     label: '删除',
+    name: 'del',
     click: () => {
       collDel({ del_type: 'dataItem', item: data, dataItemModel: state.dataItemTree, node })
     },
@@ -170,8 +172,8 @@ const dropOptions = (data, node) => [
       <div class="aside" :style="{ width: `${store.laftSideWidth}px` }">
         <div class="aside-header">
           <h4 class="aside-title">{{ state.titleName }}</h4>
-          <Dropdown :option="dropOptions(state.dataItemTree)" trigger="hover">
-            <el-button type="success" size="small"><i-ep-plus /></el-button>
+          <Dropdown :width="40" color="#79bbff" :option="dropOptions(state.dataItemTree)">
+            <i-ep-plus />
           </Dropdown>
         </div>
         <el-scrollbar height="1000px">
@@ -196,10 +198,12 @@ const dropOptions = (data, node) => [
                 <template #interior>
                   <Dropdown
                     :isEditColor="true"
+                    :width="40"
                     v-model:color="data.color"
                     :option="dropOptions(data, node)"
-                    @color-change="onColorChange"
-                  />
+                    @color-change="() => hanldeColorChange(color, data)"
+                    ><i-ep-edit-pen
+                  /></Dropdown>
                 </template>
               </MenuTag>
             </template>

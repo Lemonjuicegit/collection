@@ -40,10 +40,7 @@ upload
 *.docx
 *.sqlite3
 *.sqlite
+*.ipynb
 static2
 home
 home2
-server/manage/index.html
-server/manage/vite.svg
-server/manage/assets/index-245d5fbe.js
-server/manage/assets/index-bac50080.css
