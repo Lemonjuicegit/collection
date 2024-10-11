@@ -3,3 +3,5 @@ from .businessContractDO import BusinessContractDO as BusinessContractDO
 from .businessCustomerDO import BusinessCustomerDO as BusinessCustomerDO
 from .businessProjectDO import BusinessProjectDO as BusinessProjectDO
 from .systemDictionaryDO import SystemDictionaryDO as SystemDictionaryDO
+from .businessCoreColumn import BusinessCoreColumn as BusinessCoreColumn
+from .businessUserColumn import BusinessUserColumn as BusinessUserColumn

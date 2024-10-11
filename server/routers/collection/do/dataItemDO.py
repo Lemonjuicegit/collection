@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Relationship
 from .routerDO import RouterDO
-from routers.collection.common.TYPE import TYPE
+from package.database import TYPE
 
 
 class DataItemDO(SQLModel, table=True):
@@ -14,6 +14,7 @@ class DataItemDO(SQLModel, table=True):
     color: str = "#79bbff"
     parent_name: str
     router_name: str = TYPE.FOREIGN_KEY("router.name")
+    sort: int
     is_group: bool = False
 
     router: RouterDO | None = Relationship(back_populates="dataItem")

@@ -17,7 +17,6 @@ onMounted(async () => {
   let dataTree = await api.getDataTree()
   state.dataTree = dataTree.data
   state.routerData = res.data
-  console.log(dataTree)
 })
 
 const routerData = computed(() => {

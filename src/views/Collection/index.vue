@@ -87,17 +87,22 @@ const handlCollapse = (data) => {
 }
 
 const handleSubmit = async (data) => {
-  await collEdit('dataItem', { id: data.id, title: data.title, URL: data.URL })
+  await collEdit('dataItem', [{ id: data.id, title: data.title, URL: data.URL }])
 }
 
 const handleDragEnd = async (before, after, inner) => {
-  let data = {}
+  const data = []
   if (inner === 'inner') {
-    data = { id: before.data.id, parent_name: after.data.name }
+    data.push({ id: before.data.id, parent_name: after.data.name })
   } else {
-    data = { id: before.data.id, parent_name: after.data.parent_name }
+    data.push({ id: before.data.id, parent_name: after.data.parent_name })
   }
   await collEdit('dataItem', data)
+  const sort_array = []
+  after.parent.data.children.forEach((item, index) => {
+    sort_array.push({ id: item.id, sort: index + 1 })
+  })
+  await collEdit('dataItem', sort_array)
 }
 
 const onMouseDown = (even) => {
@@ -113,8 +118,7 @@ const onMouseDown = (even) => {
     if (width >= state.minWidth) store.laftSideWidth = width
   }
 }
-const onMouseUp = (e) => {
-  e.preventDefault()
+const onMouseUp = () => {
   let iframe = document.querySelectorAll('iframe')
   if (iframe.length > 0) {
     iframe.forEach((item) => {
@@ -124,7 +128,6 @@ const onMouseUp = (e) => {
   container.value.onmousemove = null
 }
 const hanldeColorChange = (color, data) => {
-  console.log('color', color)
   collEdit('dataItem', { id: data.id, color })
 }
 const dropOptions = (data, node) => [
@@ -163,17 +166,23 @@ const dropOptions = (data, node) => [
       collDel({ del_type: 'dataItem', item: data, dataItemModel: state.dataItemTree, node })
     },
     hidden: () => (node ? true : false)
+  },
+  {
+    name: 'color',
+    hidden: () => (node ? true : false)
   }
 ]
 </script>
 <template>
   <div class="common-layout" style="height: 100%">
-    <div class="container" style="" ref="container" @mouseup="onMouseUp">
+    <div class="container" style="" ref="container" @mouseup.prevent="onMouseUp">
       <div class="aside" :style="{ width: `${store.laftSideWidth}px` }">
         <div class="aside-header">
           <h4 class="aside-title">{{ state.titleName }}</h4>
-          <Dropdown :width="40" color="#79bbff" :option="dropOptions(state.dataItemTree)">
-            <i-ep-plus />
+          <Dropdown :width="40" :option="dropOptions(state.dataItemTree)">
+            <el-button color="#79bbff" size="small">
+              <i-ep-plus />
+            </el-button>
           </Dropdown>
         </div>
         <el-scrollbar height="1000px">
@@ -182,6 +191,7 @@ const dropOptions = (data, node) => [
             style="height: 100%"
             :data="state.dataItemTree.dataItem"
             :props="defaultProps"
+            :allow-drop="(_, dropNode) => dropNode.data.is_group"
             draggable
             @node-click="handleNodeClick"
             @node-expand="handleExpand"
@@ -196,14 +206,18 @@ const dropOptions = (data, node) => [
                 v-model:color="data.color"
               >
                 <template #interior>
-                  <Dropdown
-                    :isEditColor="true"
-                    :width="40"
-                    v-model:color="data.color"
-                    :option="dropOptions(data, node)"
-                    @color-change="() => hanldeColorChange(color, data)"
-                    ><i-ep-edit-pen
-                  /></Dropdown>
+                  <Dropdown :isEditColor="true" :width="40" :option="dropOptions(data, node)"
+                    ><el-button size="small" :color="data.color"><i-ep-edit-pen /> </el-button>
+                    <template #color>
+                      <el-button color="#FFFFFF">
+                        <input
+                          v-model="data.color"
+                          type="color"
+                          @change="hanldeColorChange(data.color, data)"
+                        />
+                      </el-button>
+                    </template>
+                  </Dropdown>
                 </template>
               </MenuTag>
             </template>

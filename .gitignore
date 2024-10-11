@@ -41,6 +41,9 @@ upload
 *.sqlite3
 *.sqlite
 *.ipynb
+*.zip
 static2
 home
 home2
+test
+/src/types

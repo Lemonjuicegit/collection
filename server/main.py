@@ -16,7 +16,7 @@ manage_dir_absolute = f"{cwdpath}\\manage"
 home_dir_absolute = f"{cwdpath}\\home"
 assets_dir_absolute = f"{cwdpath}\\static\\assets"
 assets_manage_absolute = f"{cwdpath}\\manage\\assets"
-environment = 0
+environment = 1
 if environment:
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.mount(

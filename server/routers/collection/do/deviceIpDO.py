@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel
-from routers.collection.common.TYPE import TYPE
+from package.database import TYPE
 
 
 class DeviceIpDO(SQLModel, table=True):

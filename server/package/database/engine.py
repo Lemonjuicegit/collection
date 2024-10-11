@@ -1,16 +1,16 @@
-from sqlmodel import create_engine, SQLModel, Session
+from sqlmodel import create_engine, Session
 from package.utils import re_json
 from fastapiUtils import cwdpath
 
-conf = re_json(rf"{cwdpath}\config.json")
+# conf = re_json(rf"{cwdpath}\config.json")
 
-sqlite_file_name = conf["database"]["server"]
-server = f"sqlite:///{sqlite_file_name}"
+# sqlite_file_name = conf["database"]["server"]
+# server = f"sqlite:///{sqlite_file_name}"
 
 
 def getEngine(
     drivers=None,
-    url=None,
+    ip=None,
     port=None,
     user=None,
     password=None,
@@ -22,7 +22,7 @@ def getEngine(
     else:
         config = {
             "drivers": drivers,
-            "url": url,
+            "ip": ip,
             "port": port,
             "user": user,
             "password": password,
@@ -30,14 +30,14 @@ def getEngine(
         }
     match config["drivers"]:
         case "mysql":
-            server = f"mysql+pymysql://{config['user']}:{config['password']}@{config['url']}:{config['port']}/{config['database']}"
+            server = f"mysql+pymysql://{config['user']}:{config['password']}@{config['ip']}:{config['port']}/{config['database']}"
             return create_engine(server)
         case "sqlite":
-            server = f"{config['drivers']}:///{config['server']}"
+            server = f"{config['drivers']}:///{config['ip']}"
             connect_args = {"check_same_thread": False}
             return create_engine(server, connect_args=connect_args)
         case "postgresql":
-            server = f"postgresql://{config['user']}:{config['password']}@{config['url']}:{config['port']}/{config['database']}"
+            server = f"postgresql://{config['user']}:{config['password']}@{config['ip']}:{config['port']}/{config['database']}"
             return create_engine(server)
 
 

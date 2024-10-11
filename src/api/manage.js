@@ -35,6 +35,7 @@ export default {
     })
   },
   update: (apiUrl, data) => {
+    console.log(data)
     return request.post({
       url: `/collection/${apiUrl}/update`,
       data

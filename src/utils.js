@@ -74,12 +74,31 @@ const getDelId = (tree_data) => {
   return ids
 }
 const filterEmptyValues = (obj) => {
-  const filteredObj = {}
-  Object.keys(obj).forEach((key) => {
-    if (obj[key] !== null && obj[key] !== undefined && !Number.isNaN(obj[key]) && obj[key] !== 0) {
-      filteredObj[key] = obj[key]
-    }
-  })
+  if (Array.isArray(obj)) {
+    var filteredObj = []
+    obj.forEach((item) => {
+      var itemObj = {}
+      Object.keys(item).forEach((key) => {
+        if (item[key] !== null && item[key] !== undefined && !Number.isNaN(item[key])) {
+          itemObj[key] = item[key]
+        }
+      })
+      filteredObj.push(itemObj)
+    })
+  } else {
+    var filteredObj = {}
+    Object.keys(obj).forEach((key) => {
+      if (
+        obj[key] !== null &&
+        obj[key] !== undefined &&
+        !Number.isNaN(obj[key]) &&
+        obj[key] !== 0
+      ) {
+        filteredObj[key] = obj[key]
+      }
+    })
+  }
+
   return filteredObj
 }
 export {

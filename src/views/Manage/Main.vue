@@ -13,19 +13,16 @@ const dropOptions = (data) => [
   {
     label: '添加网址',
     click: () => collAdd('dataItem', data),
-    hidden: () => {
-      console.log(data)
-      return true
-    }
+    name: 'addItem'
   },
   {
     label: '添加分组',
-    click: () => collAdd('groupItem', data)
+    click: () => collAdd('groupItem', data),
+    name: 'addGroup'
   }
 ]
 
 const onRouterTitleChange = async (value) => {
-  console.log(value)
   await collEdit('router', { id: dataItemModel.value.id, title: value })
 }
 const onRouterPathChange = async (value) => {
@@ -33,13 +30,18 @@ const onRouterPathChange = async (value) => {
 }
 
 const handlNodeDrop = async (before, after, inner) => {
-  let data = {}
+  const data = []
   if (inner === 'inner') {
-    data = { id: before.data.id, parent_name: after.data.name }
+    data.push({ id: before.data.id, parent_name: after.data.name })
   } else {
-    data = { id: before.data.id, parent_name: after.data.parent_name }
+    data.push({ id: before.data.id, parent_name: after.data.parent_name })
   }
   await collEdit('dataItem', data)
+  const sort_array = []
+  after.parent.data.children.forEach((item, index) => {
+    sort_array.push({ id: item.id, sort: index + 1 })
+  })
+  await collEdit('dataItem', sort_array)
 }
 
 const onEditItem = (data) => {
@@ -52,10 +54,10 @@ const onEditItem = (data) => {
   editDialog.value = true
 }
 const handleSubmit = async (data) => {
-  collEdit('dataItem', { id: data.id, title: data.title, URL: data.URL })
+  collEdit('dataItem', [{ id: data.id, title: data.title, URL: data.URL }])
 }
 const onColorChange = (data) => {
-  collEdit('dataItem', { id: data.id, color: data.color })
+  collEdit('dataItem', [{ id: data.id, color: data.color }])
 }
 </script>
 <template>
@@ -73,8 +75,10 @@ const onColorChange = (data) => {
       <template #header>
         <div style="gap: 20px; display: flex">
           <span>网址管理</span>
-          <Dropdown :option="dropOptions(dataItemModel)" trigger="hover">
-            <el-button type="success" size="small"><i-ep-plus /></el-button>
+          <Dropdown :option="dropOptions(dataItemModel)" color="#b3e19d" trigger="hover">
+            <el-tag>
+              <i-ep-plus />
+            </el-tag>
           </Dropdown>
         </div>
       </template>
@@ -99,8 +103,15 @@ const onColorChange = (data) => {
                       >
                       <el-link v-else type="primary" disabled>空网址</el-link>
                     </div>
-                    <Dropdown v-if="data.is_group" :option="dropOptions(data)" trigger="hover">
-                      <el-button type="success" size="small"><i-ep-plus /></el-button>
+                    <Dropdown
+                      v-if="data.is_group"
+                      color="#b3e19d"
+                      :option="dropOptions(data)"
+                      trigger="hover"
+                    >
+                      <el-tag>
+                        <i-ep-plus />
+                      </el-tag>
                     </Dropdown>
                     <el-button type="success" size="small" @click.stop="onEditItem(data)"
                       ><i-ep-edit
@@ -108,14 +119,16 @@ const onColorChange = (data) => {
                     <el-button
                       type="danger"
                       size="small"
-                      @click="collDel({ del_type: 'dataItem', item: data, dataItemModel, node })"
+                      @click.stop="
+                        collDel({ del_type: 'dataItem', item: data, dataItemModel, node })
+                      "
                       ><i-ep-delete-filled
                     /></el-button>
                     <input
                       type="color"
                       v-model="data.color"
                       @change="onColorChange(data)"
-                      @click="(e) => e.stopPropagation()"
+                      @click.stop
                     />
                   </div>
                 </template>

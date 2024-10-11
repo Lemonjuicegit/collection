@@ -1,30 +1,8 @@
-import json
-from pathlib import Path
-from routers import store,state,zip_list
-from .execute import gardens
-    
-current = Path(store.cwdpath) / 'package' / 'coordinateStr'
-templaet_list = json.loads((Path(current) / 'template.json').read_text(encoding="utf-8"))
-def coordinate_txt(shppath,templaet,ip,precision):
-    jd = store.sendPath / ip / '节点.shp'
-    if not shppath.exists():
-        return {'state':state.ERR,'res':'未找到该文件'}
-    if templaet['default']:
-        gar = gardens(jd,shppath,Path(templaet_list[int(templaet['default'])]))
-    else:
-        temp_file = store.file_id(templaet['file_id'],'path')
-        gar = gardens(jd,shppath,temp_file)
-    shpfiles = list((store.sendPath / ip).glob('节点.*'))
-    save_path = gar.get_coordinate_string(
-        store.sendPath / ip / f"{shppath.stem}.txt", precision
-    )
-    shpfiles.insert(0,save_path)
-    return shpfiles
-
 import geopandas as gpd
 from pathlib import Path
 from shapely.geometry import Point, Polygon, MultiPolygon
 import math
+
 
 class Gardens:
     def __init__(self, shp_path, template_path):
@@ -38,11 +16,15 @@ class Gardens:
         content = self.template_path.read_text(encoding="gb2312").rpartition("\n")
         self.template_header, _, self.template_body = content
         self.template_body = [line.strip() for line in self.template_body.split(",")]
-        self.key_field = next((line[1:] for line in self.template_body if line.startswith("#")), "")
+        self.key_field = next(
+            (line[1:] for line in self.template_body if line.startswith("#")), ""
+        )
 
     def _initialize_dataframes(self):
         # 初始化数据框
-        self.jd = gpd.GeoDataFrame(columns=["dkh", "xh", "JZDH", "geometry"], crs=self.gdf.crs)
+        self.jd = gpd.GeoDataFrame(
+            columns=["dkh", "xh", "JZDH", "geometry"], crs=self.gdf.crs
+        )
         self.delgdf = gpd.GeoDataFrame(columns=["dkh", "geometry"], crs=self.gdf.crs)
 
     def extract_coordinates(self, save_path):
@@ -58,12 +40,19 @@ class Gardens:
                 exterior_coords = polygon.exterior.coords
                 interior_coords = polygon.interiors
 
-                for xh, coords in enumerate([exterior_coords] + interior_coords, start=1):
+                for xh, coords in enumerate(
+                    [exterior_coords] + interior_coords, start=1
+                ):
                     for idx, coord in enumerate(coords):
                         label = f"J{idx+1}"
                         if idx == len(coords) - 1 and xh > 1:
                             label = f"J{len(exterior_coords)}"
-                        self.jd.loc[len(self.jd)] = [row[self.key_field], str(xh), label, Point(coord)]
+                        self.jd.loc[len(self.jd)] = [
+                            row[self.key_field],
+                            str(xh),
+                            label,
+                            Point(coord),
+                        ]
 
         self.gdf.apply(process_geometry, axis=1)
         self.jd.to_file(save_path, encoding="gb18030")
@@ -75,7 +64,9 @@ class Gardens:
             simplified_coords = [exterior_coords[0]]
 
             for prev, curr in zip(exterior_coords, exterior_coords[1:]):
-                distance = math.sqrt((prev[0] - curr[0])**2 + (prev[1] - curr[1])**2)
+                distance = math.sqrt(
+                    (prev[0] - curr[0]) ** 2 + (prev[1] - curr[1]) ** 2
+                )
                 if distance > accuracy:
                     simplified_coords.append(curr)
 
@@ -91,14 +82,25 @@ class Gardens:
             file.write(f"{self.template_header}\n")
 
             def write_coordinates(row):
-                attributes = ",".join(str(row[col[1:]]) for col in self.template_body if col.startswith(("$", "#")))
-                attributes += f",{len(self.jd[self.jd['dkh'] == row[self.key_field]])-1}\n"
+                attributes = ",".join(
+                    str(row[col[1:]])
+                    for col in self.template_body
+                    if col.startswith(("$", "#"))
+                )
+                attributes += (
+                    f",{len(self.jd[self.jd['dkh'] == row[self.key_field]])-1}\n"
+                )
                 file.write(attributes)
 
-                for _, item in self.jd[self.jd['dkh'] == row[self.key_field]].iterrows():
-                    file.write(f"{item.JZDH},{item.xh},{round(item.geometry.y, precision)},{round(item.geometry.x, precision)}\n")
+                for _, item in self.jd[
+                    self.jd["dkh"] == row[self.key_field]
+                ].iterrows():
+                    file.write(
+                        f"{item.JZDH},{item.xh},{round(item.geometry.y, precision)},{round(item.geometry.x, precision)}\n"
+                    )
 
             self.gdf.apply(write_coordinates, axis=1)
+
 
 def read_data(input_path, output_path):
     with open(input_path, "r", encoding="gb2312") as file:
@@ -118,5 +120,3 @@ def read_data(input_path, output_path):
                 current_polygon = []
 
     gdf.to_file(output_path, encoding="gb18030")
-
-

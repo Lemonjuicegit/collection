@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel
-from routers.collection.common.TYPE import TYPE
+from package.database import TYPE
 
 class PermissionDO(SQLModel, table=True):
     __tablename__ = "permission"

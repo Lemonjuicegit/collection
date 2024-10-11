@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel
 from package.database import TYPE
 from datetime import date
+from typing import List
 
 
 class BusinessContractDO(SQLModel, table=True):
@@ -8,7 +9,8 @@ class BusinessContractDO(SQLModel, table=True):
     id: int = TYPE.PRIMARY_KEY
     name: str  # 合同名称
     code: str  # 合同编号
-    signing_company: int  # 签约主体(乙方)
+    signing_company: str  # 签约主体(乙方)
+    signing_company_list: str
     nature: int  # 合同性质
     type: int  # 合同类别
     customer_addr: str  # 客户联系地址
@@ -44,3 +46,5 @@ class BusinessContractDO(SQLModel, table=True):
     result: str  #
     statistics_time: date  # 合同统计时间
     responsible_person: str  # 合同责任人
+    customer_name_list: int
+    signing_company_list: int

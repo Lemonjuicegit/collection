@@ -24,6 +24,11 @@ const useCollection = () => {
     },
     async collAdd(add_type, item) {
       let res
+      const sort = item.dataItem
+        ? item.dataItem.length + 1
+        : item.children
+          ? item.children.length + 1
+          : 1
       if (add_type === 'router') {
         res = await api.add('routerController', { title: '新建路由', router_type: 'collection' })
       } else if (add_type === 'dataItem') {
@@ -32,7 +37,8 @@ const useCollection = () => {
           path: '/iframe',
           parent_name: item.is_group ? item.name : 'top',
           router_name: item.router_name ? item.router_name : item.name,
-          is_group: false
+          is_group: false,
+          sort
         }
         res = await api.add('dataItemController', data)
       } else if (add_type === 'groupItem') {
@@ -40,7 +46,8 @@ const useCollection = () => {
           title: '新建分组',
           parent_name: item.is_group ? item.name : 'top',
           router_name: item.router_name ? item.router_name : item.name,
-          is_group: true
+          is_group: true,
+          sort
         }
         res = await api.add('dataItemController', data)
       }
