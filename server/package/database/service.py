@@ -1,3 +1,4 @@
+import csv
 from sqlmodel import Session, select, delete, SQLModel
 from .engine import getSession
 
@@ -10,7 +11,7 @@ class Service:
 
     def initSession(self):
         if isinstance(self.session_conf, dict):
-            self.session: Session = getSession(**self.session_conf)
+            self.session = getSession(**self.session_conf)
         elif isinstance(self.session_conf, str):
             self.session = getSession(conf=self.session_conf)
 
@@ -49,6 +50,23 @@ class Service:
         self.session.exec(dele)
         self.session.commit()
 
+    def to_csv(self, where=None, file_path=None, encoding="utf-8"):
+        if where:
+            data = self.select(where)
+        else:
+            data = self.select_all()
+        fields = list(self.DO.__fields__.keys())
+        if file_path:
+            with open(f"{file_path}.csv", "w", encoding=encoding, newline="") as f:
+                write = csv.DictWriter(f, fields)
+                write.writeheader()
+                write.writerows([v.model_dump() for v in data])
+        else:
+            with open("data.csv", "w", encoding=encoding, newline="") as f:
+                write = csv.DictWriter(f, fields)
+                write.writeheader()
+                write.writerows([v.model_dump() for v in data])
+
     def up_fidld(self, before, after, callable, where=None):
         if where:
             statement = self.select(where)
@@ -58,7 +76,9 @@ class Service:
         for item in statement:
             item_data = {}
             item_data["id"] = item.id
-            item_data[after] = callable(dict(item)[before])
+            res = callable(dict(item)[before])
+            if res:
+                item_data[after] = res
             up_data.append(item_data)
 
         self.update(up_data)

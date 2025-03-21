@@ -1,11 +1,9 @@
-from package.database import BaseService
+from .service import Service
 from package.database.business.DO import BusinessContractDO
-from package.database.business.service import session
 
-
-class BusinessContractService(BaseService):
+class BusinessContractService(Service):
     def __init__(self) -> None:
-        super().__init__(BusinessContractDO, session)
+        super().__init__(BusinessContractDO)
 
 
 businessContractService = BusinessContractService()

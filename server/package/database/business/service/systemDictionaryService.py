@@ -1,11 +1,10 @@
-from package.database import BaseService
 from package.database.business.DO import SystemDictionaryDO
-from package.database.business.service import session
+from .service import Service
 
 
-class SystemDictionaryService(BaseService):
+class SystemDictionaryService(Service):
     def __init__(self) -> None:
-        super().__init__(SystemDictionaryDO, session)
+        super().__init__(SystemDictionaryDO)
 
 
 systemDictionaryService = SystemDictionaryService()

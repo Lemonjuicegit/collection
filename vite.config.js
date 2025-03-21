@@ -54,7 +54,7 @@ export default defineConfig(({ command, mode }) => {
           // 自动导入 Element Plus 组件
           ElementPlusResolver()
         ],
-
+        dirs: ['src/components'],
         dts: 'src/types/auto-components.d.ts'
       }),
 

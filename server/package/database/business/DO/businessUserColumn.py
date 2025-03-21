@@ -3,7 +3,7 @@ from package.database import TYPE
 from datetime import date
 
 
-class BusinessUserColumn(SQLModel, table=True):
+class BusinessUserColumnDO(SQLModel, table=True):
     __tablename__ = "business_user_column"
     id: int = TYPE.PRIMARY_KEY
     core_column_id: int

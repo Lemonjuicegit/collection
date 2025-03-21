@@ -1,5 +1,5 @@
 import os
-from .Store import store,state
+from .Store import store, state
 from .database import *
 from .utils import *
 from .log import createlog
@@ -8,5 +8,6 @@ from .Use import use
 from .utils import *
 from .Add import add
 from .log import logger
+from .Result import Result
 
-log = createlog('\\'.join(__file__.split("\\")[:-2]))
+log = createlog("\\".join(__file__.split("\\")[:-2]))

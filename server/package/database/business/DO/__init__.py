@@ -1,7 +1,17 @@
-from .businessAchievementDO import BusinessAchievementDO as BusinessAchievementDO
-from .businessContractDO import BusinessContractDO as BusinessContractDO
-from .businessCustomerDO import BusinessCustomerDO as BusinessCustomerDO
-from .businessProjectDO import BusinessProjectDO as BusinessProjectDO
-from .systemDictionaryDO import SystemDictionaryDO as SystemDictionaryDO
-from .businessCoreColumn import BusinessCoreColumn as BusinessCoreColumn
-from .businessUserColumn import BusinessUserColumn as BusinessUserColumn
+from .businessAchievementDO import BusinessAchievementDO
+from .businessContractDO import BusinessContractDO
+from .businessCustomerDO import BusinessCustomerDO
+from .businessProjectDO import BusinessProjectDO
+from .systemDictionaryDO import SystemDictionaryDO
+from .businessCoreColumn import BusinessCoreColumnDO
+from .businessUserColumn import BusinessUserColumnDO
+
+__all__ = [
+    "BusinessAchievementDO",
+    "BusinessContractDO",
+    "BusinessCustomerDO",
+    "BusinessProjectDO",
+    "SystemDictionaryDO",
+    "BusinessCoreColumnDO",
+    "BusinessUserColumnDO",
+]

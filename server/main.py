@@ -1,3 +1,4 @@
+from pathlib import Path
 import traceback
 from fastapi import FastAPI, Query, Request, UploadFile, File, BackgroundTasks
 from pydantic import BaseModel
@@ -9,35 +10,34 @@ from routers import store, unzip, log, use, Api, get_tbbh, state
 from fastapiUtils import include_router, handle, cwdpath
 from routers.collection.common.token import create_access_token
 from routers.collection.result import Result
-from routers.collection.service import deviceIpService
+from routers.collection.service import deviceIpService, routerService
 
 ip_list = deviceIpService.getIpList()
 manage_dir_absolute = f"{cwdpath}\\manage"
 home_dir_absolute = f"{cwdpath}\\home"
 assets_dir_absolute = f"{cwdpath}\\static\\assets"
 assets_manage_absolute = f"{cwdpath}\\manage\\assets"
-environment = 1
+environment = 0
 if environment:
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
-    app.mount(
-        "/manage", StaticFiles(directory=manage_dir_absolute, html=True), name="manage"
-    )
+    # app.mount(
+    #     "/manage", StaticFiles(directory=manage_dir_absolute, html=True), name="manage"
+    # )
+    # app.mount("/html", StaticFiles(directory=home_dir_absolute), name="html")
     app.mount("/assets", StaticFiles(directory=assets_manage_absolute), name="assets")
-    app.mount("/home", StaticFiles(directory=home_dir_absolute, html=True), name="home")
     rewrite = ""
 else:
     app = FastAPI()
     rewrite = ""
 
-# @app.middleware("http")
-# async def check_static_access(request: Request, call_next):
-#     if request.url.path[1:] in config.re_routerName:
-#         return JSONResponse(
-#             content={"detail": "Static content access disabled."}, status_code=404
-#         )
-#     print(request)
-#     response = await call_next(request)
-#     return response
+
+@app.middleware("http")
+async def check_static_access(request: Request, call_next):
+    ip = request.client.host
+    Path(store.uploadPath / ip).mkdir(exist_ok=True, parents=True)
+    response = await call_next(request)
+    return response
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -146,7 +146,12 @@ if environment:
 
     @app.get("/{xm_name}")
     async def getHtml(xm_name):
-        return FileResponse(rf"{cwdpath}/manage/index.html")
+        res = routerService.select_all()
+        path_list = [v.path for v in res]
+        if xm_name == "home":
+            return FileResponse(f"{cwdpath}/home/index.html")
+        elif xm_name in path_list:
+            return FileResponse(rf"{cwdpath}/manage/index.html")
 
 
 async def cell(args: Args, query=Query(None), req: Request = None):

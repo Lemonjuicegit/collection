@@ -1,6 +1,8 @@
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 import pandas as pd
+import os
 
 
 class State:
@@ -23,7 +25,7 @@ class Store:
         self.sendPath = Path(self.cwdpath) / "send"
         self.serverip = "183.71.245.98:45454"
 
-    def addUseFile(self, ip, directory: Path, filename: str):
+    def addUseFile(self, ip, directory: Path | None = None, filename: str = ""):
         """
         Args:
             ip (str): ip地址字符串
@@ -33,9 +35,9 @@ class Store:
         file_id = str(uuid4())
         self.useFile.loc[self.useFile.shape[0]] = [
             ip,
-            directory / ip,
+            directory if directory else self.uploadPath / ip,
             filename,
-            directory / ip / filename,
+            directory if directory else self.uploadPath / ip / filename,
             filename.split(".")[1],
             filename.split(".")[0],
             file_id,
@@ -58,7 +60,7 @@ class Store:
         self.useFile = self.useFile.drop(drop_df.index)
         return []
 
-    def file_id(self, file_id, fiedl=""):
+    def file_id(self, file_id, fiedl="") -> Any | pd.DataFrame:
         res = self.useFile[self.useFile.ID == file_id]
         if not res.shape[0]:
             return None

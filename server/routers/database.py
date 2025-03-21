@@ -3,11 +3,10 @@ import uuid
 
 serverip = "183.71.245.98:45454"
 
-cnn = connect('db.sqlite3')
+cnn = connect("db.sqlite3")
 cursor = cnn.cursor()
 
-
-# def setupData(): 
+# def setupData():
 #     path = Path(r'\\Lzd202201031623\2023年度非粮化验收\1.举证照片成果')
 #     tab_data = pd.read_excel(r'E:\exploitation\collection\server\data.xlsx')
 #     def trdir(row):
@@ -23,12 +22,13 @@ cursor = cnn.cursor()
 #             valuestr = ','.join([f"'{v}'" for v in data])
 #             sql = f"INSERT INTO GD_FLH_picture(ID,ZJ,TBBH,) VALUES ({','.join(valuestr)})"
 #             cursor.execute(sql)
-        
+
 #     tab_data.apply(trdir,axis=1)
 #     cnn.commit()
 
-def search_picture(zj:list[str]):
-    picture_data = {"title":"耕地非粮化举证","permissions":0,"data":[]}
+
+def search_picture(zj: list[str]):
+    picture_data = {"title": "耕地非粮化举证", "permissions": 0, "data": []}
     if zj[0] == "all":
         zj_all = list(cursor.execute("SELECT XZQDM FROM SPB_XZQDM"))
         zj_all = [v[0] for v in zj_all]
@@ -39,38 +39,46 @@ def search_picture(zj:list[str]):
         if not res:
             return picture_data
         ZJMC = res[0][0]
-        picture_data["data"].append({"title":ZJMC,"name":str(uuid.uuid4()),"child": False,"children":[]})
+        picture_data["data"].append(
+            {"title": ZJMC, "name": str(uuid.uuid4()), "child": False, "children": []}
+        )
         res = cursor.execute(f"SELECT * FROM GD_FLH_picture WHERE XZQDM = '{v}'")
         temp = {}
         for row in res:
             if row[2] not in temp.keys():
-                temp[row[2]] = [{
-                    "title": row[4],
-                    "name": row[0],
-                    "URL": f"http://{serverip}/{row[2]}/{row[4]}",
-                }]
+                temp[row[2]] = [
+                    {
+                        "title": row[4],
+                        "name": row[0],
+                        "URL": f"http://{serverip}/{row[2]}/{row[4]}",
+                    }
+                ]
             else:
-                temp[row[2]].append({
-                    "title": row[4],
-                    "name": row[0],
-                    "URL": f"http://{serverip}/{row[2]}/{row[4]}",
-                })
-        picture_data["data"][len(picture_data["data"])-1]["children"] = [
+                temp[row[2]].append(
+                    {
+                        "title": row[4],
+                        "name": row[0],
+                        "URL": f"http://{serverip}/{row[2]}/{row[4]}",
+                    }
+                )
+        picture_data["data"][len(picture_data["data"]) - 1]["children"] = [
             {
-                "title":key,
-                "tbbh":key,
-                "name":str(uuid.uuid4()),
+                "title": key,
+                "tbbh": key,
+                "name": str(uuid.uuid4()),
                 "child": True,
-                "URLS":value,
+                "URLS": value,
                 "path": "/FlhSearch",
-            } for key,value in temp.items()]
-    
+            }
+            for key, value in temp.items()
+        ]
+
     return picture_data
-   
+
+
 def get_tbbh():
     res = cursor.execute("SELECT TBBH FROM GD_FLH_picture")
     TBBH = []
     for row in res:
         TBBH.append(row[0])
     return TBBH
-    

@@ -43,11 +43,11 @@ def getEngine(
 
 def getSession(
     drivers=None,
-    url=None,
+    ip=None,
     port=None,
     user=None,
     password=None,
     database=None,
     conf=None,
 ):
-    return Session(getEngine(drivers, url, port, user, password, database, conf))
+    return Session(getEngine(drivers, ip, port, user, password, database, conf))

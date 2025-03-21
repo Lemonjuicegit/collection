@@ -3,28 +3,28 @@ from package.database import TYPE
 from datetime import date
 
 
-class BusinessCoreColumn(SQLModel, table=True):
+class BusinessCoreColumnDO(SQLModel, table=True):
     __tablename__ = "business_core_column"
     id: int = TYPE.PRIMARY_KEY
-    module: str = None
-    column_name: str = None
-    column_cn: str = None
-    searchable: int = None
-    column_type: str = None
-    search_type: str = None
-    condition: str = None
-    dic_id: int = None
-    deleted: int = None
-    creator: str = None
-    updater: str = None
-    create_time: date = None
-    update_time: date = None
-    sort: int = None
-    original: int = None
-    parent_name: str = None
-    formatter: str = None
-    viewable: int = None
-    min_width: int = None
-    param_type: str = None
-    date_formatter: str = None
-    number_formatter: str = None
+    module: str
+    column_name: str
+    column_cn: str
+    searchable: int
+    column_type: str
+    search_type: str
+    condition: str
+    dic_id: int
+    deleted: int
+    creator: str
+    updater: str
+    create_time: date
+    update_time: date
+    sort: int
+    original: int
+    parent_name: str
+    formatter: str
+    viewable: int
+    min_width: int
+    param_type: str
+    date_formatter: str
+    number_formatter: str

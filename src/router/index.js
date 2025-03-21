@@ -1,11 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Dexf from '@/views/Dexf.vue'
 import manage_api from '@/api/manage'
 
 const routes = [
   {
     path: '/:xm_name',
-    name: 'home',
+    name: 'xmname',
     component: () => import('@/views/Collection/index.vue'),
     props: true,
     meta: {
@@ -15,7 +14,7 @@ const routes = [
   {
     path: '/Dexf',
     name: 'Dexf',
-    component: Dexf
+    component: () => import('@/views/Dexf.vue')
   },
   {
     path: '/error/:code/:msg',
@@ -52,7 +51,7 @@ router.beforeEach(async (to) => {
     if (path_list.code === 200) {
       return true
     } else if (path_list.code === 403) {
-      return { ame: 'error', params: { code: path_list.code, msg: path_list.msg } }
+      return { name: 'error', params: { code: path_list.code, msg: path_list.msg } }
     }
   }
   return true

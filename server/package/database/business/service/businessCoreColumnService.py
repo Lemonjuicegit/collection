@@ -1,11 +1,10 @@
-from package.database import BaseService
-from package.database.business.DO import BusinessCoreColumn
-from package.database.business.service import session
+from .service import Service
+from package.database.business.DO import BusinessCoreColumnDO
 
 
-class BusinessCoreColumnService(BaseService):
+class BusinessCoreColumnService(Service):
     def __init__(self) -> None:
-        super().__init__(BusinessCoreColumn, session)
+        super().__init__(BusinessCoreColumnDO)
 
 
 businessCoreColumnService = BusinessCoreColumnService()

@@ -43,6 +43,7 @@ upload
 *.ipynb
 *.zip
 static2
+static
 home
 home2
 test

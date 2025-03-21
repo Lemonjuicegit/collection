@@ -24,15 +24,21 @@ def get_router_list():
 def include_router(app, rewrite):
     # 批量挂载路由
     modules = get_router_list()
-    modules = [f"routers.{v}" for v in modules]
+    modules = [f"routers.{v}.app" for v in modules]
     for module in modules:
         imported_module = importlib.import_module(module)
-        tag = module.split(".")[-1]
-        app.include_router(
-            imported_module.router,
-            prefix=f"{rewrite}/{tag}",
-            tags=[tag],
-        )
+        router_name = module.split(".")[-2]
+        if imported_module.router.prefix:
+            app.include_router(
+                imported_module.router,
+                tags=[router_name],
+            )
+        else:
+            app.include_router(
+                imported_module.router,
+                prefix=f"{rewrite}/{router_name}",
+                tags=[router_name],
+            )
 
 
 def split_args(args: str) -> dict:

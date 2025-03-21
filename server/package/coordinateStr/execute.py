@@ -1,4 +1,4 @@
-import math
+import math, os
 import geopandas as gpd
 from pathlib import Path
 from shapely import Point, Polygon, MultiPolygon
@@ -18,8 +18,13 @@ class gardens:
                     return item
 
         self.key_field = list(filter(filter_key, self.temp))[0][1:]
-        self.getJd(jd)
-        self.delgdf = gpd.GeoDataFrame(columns=["dkh", "geometry"], crs=self.gdf.crs)
+        if os.path.exists(jd):
+            self.jd = gpd.read_file(jd)
+        else:
+            self.getJd(jd)
+        self.delgdf = gpd.GeoDataFrame(
+            columns=["dkh", "xh", "JZDH", "geometry"], crs=self.gdf.crs
+        )
 
     def getJd(self, save):
         self.jd = gpd.GeoDataFrame(
@@ -75,28 +80,25 @@ class gardens:
         self.gdf.apply(coordinate, axis=1)
         self.jd.to_file(save, encoding="gb18030")
 
-    def delJd(self, accuracy, field, save):
-        def shan(row):
-            sxy = [0, 0]
-            xy = list(zip(row.geometry.exterior.xy[0], row.geometry.exterior.xy[1]))
-            n = 0
-            catXY = []
-            for i in xy:
-                if sxy[0]:
-                    lenth = math.sqrt((sxy[0] - i[0]) ** 2 + (sxy[1] - i[1]) ** 2)
-                    if lenth > accuracy:
-                        catXY.append((i[0], i[1]))
-                else:
-                    catXY.append((i[0], i[1]))
-                sxy[0] = i[0]
-                sxy[1] = i[1]
-                n += 1
-            self.delgdf.loc[self.delgdf.shape[0]] = [row[field], Polygon(catXY)]
+    def delJd(self, accuracy, key_field, save):
+        key_list = set(self.jd[key_field].values)
 
-        self.gdf.apply(shan, axis=1)
-        self.delgdf["geometry"] = self.delgdf["geometry"].apply(
-            lambda geom: geom.zxy if geom.has_z else geom
-        )
+        for i in key_list:
+            jddata = self.jd[self.jd[key_field] == i]
+            sxy = [0, 0]
+            for _, row in jddata.iterrows():
+                x = row.geometry.x
+                y = row.geometry.y
+                if sxy[0]:
+                    lenth = math.sqrt((sxy[0] - x) ** 2 + (sxy[1] - y) ** 2)
+                    if lenth > accuracy:
+                        self.delgdf.loc[self.delgdf.shape[0]] = [
+                            *list(row)[:-1],
+                            Point(x, y),
+                        ]
+                sxy[0] = x
+                sxy[1] = y
+
         self.delgdf.to_file(save, encoding="gb18030")
 
     def get_coordinate_string(self, save, precision):
@@ -113,7 +115,7 @@ class gardens:
                             att = f"{att},{row[t[1:]]}" if att else row[t[1:]]
                             continue
                         if t == "&index":
-                            att = f"{att},{len(por)-1}" if att else str(len(por) - 1)
+                            att = f"{att},{len(por) - 1}" if att else str(len(por) - 1)
                             continue
                         att = f"{att},{t}" if att else t
                     else:
@@ -122,11 +124,24 @@ class gardens:
                 f.write(att)
                 for _, item in por.iterrows():
                     f.write(
-                        f"{item.JZDH},{item.xh},{round(item.geometry.y,precision)},{round(item.geometry.x,precision)}\n"
+                        f"{item.JZDH},{item.xh},{round(item.geometry.y, precision)},{round(item.geometry.x, precision)}\n"
                     )
 
             self.gdf.apply(coordinate, axis=1)
             return save
+
+
+def jd_to_pol(data, key_field, save):
+    gpdjd = gpd.read_file(data)
+    gpfplo = gpd.GeoDataFrame(columns=[key_field, "geometry"], crs=gpdjd.crs)
+    key = set(gpdjd[key_field].values)
+    for i in key:
+        poly = gpdjd[gpdjd[key_field] == i]
+        x_list = poly["geometry"].x.tolist()
+        y_list = poly["geometry"].y.tolist()
+        xy_list = list(zip(x_list, y_list))
+        gpfplo.loc[gpfplo.shape[0]] = [i, Polygon(xy_list)]
+    gpfplo.to_file(save, encoding="gb18030")
 
 
 def readData(path, save):
@@ -151,11 +166,11 @@ def readData(path, save):
 
 
 if __name__ == "__main__":
-    savepath = r"E:\工作文档\测试导出数据\927"
-    shpname = "万古27导坐标192块"
+    savepath = r"E:\工作文档\测试导出数据\1022"
+    shpname = "万古27导坐标最终"
     gar = gardens(
         rf"{savepath}\节点.shp",
         rf"{savepath}\{shpname}.shp",
         Path(rf"{savepath}\新增模板(2).txt"),
     )
-    gar.get_coordinate_string(rf"{savepath}\{shpname}.txt", 2)
+    gar.get_coordinate_string(rf"{savepath}\{shpname}.txt", 3)

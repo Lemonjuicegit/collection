@@ -1,11 +1,10 @@
-from package.database import BaseService
+from .service import Service
 from package.database.business.DO import BusinessAchievementDO
-from package.database.business.service import session
 
 
-class BusinessAchievementService(BaseService):
+class BusinessAchievementService(Service):
     def __init__(self) -> None:
-        super().__init__(BusinessAchievementDO, session)
+        super().__init__(BusinessAchievementDO)
 
 
 businessAchievementService = BusinessAchievementService()
