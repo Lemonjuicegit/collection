@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from routers import store,state,zip_list
 from .execute import gardens
-    
+
 current = Path(store.cwdpath) / 'package' / 'coordinateStr'
 templaet_list = json.loads((Path(current) / 'template.json').read_text(encoding="utf-8"))
 def coordinate_txt(shppath,templaet,ip,precision):
@@ -73,7 +73,6 @@ class Gardens:
         def simplify_polygon(row):
             exterior_coords = row.geometry.exterior.coords
             simplified_coords = [exterior_coords[0]]
-
             for prev, curr in zip(exterior_coords, exterior_coords[1:]):
                 distance = math.sqrt((prev[0] - curr[0])**2 + (prev[1] - curr[1])**2)
                 if distance > accuracy:
@@ -94,19 +93,15 @@ class Gardens:
                 attributes = ",".join(str(row[col[1:]]) for col in self.template_body if col.startswith(("$", "#")))
                 attributes += f",{len(self.jd[self.jd['dkh'] == row[self.key_field]])-1}\n"
                 file.write(attributes)
-
                 for _, item in self.jd[self.jd['dkh'] == row[self.key_field]].iterrows():
                     file.write(f"{item.JZDH},{item.xh},{round(item.geometry.y, precision)},{round(item.geometry.x, precision)}\n")
-
             self.gdf.apply(write_coordinates, axis=1)
 
 def read_data(input_path, output_path):
     with open(input_path, "r", encoding="gb2312") as file:
         lines = file.readlines()
-
     gdf = gpd.GeoDataFrame(columns=("MJ", "QLR", "DJH", "geometry"))
     current_polygon = []
-
     for line in lines:
         parts = line.strip().split(",")
         if parts[0].startswith("J"):

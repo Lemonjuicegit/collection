@@ -22,6 +22,7 @@ coverage
 /server/static
 /server/static2
 /server/manage
+/server/manage_test
 /server/manage2
 /server/.vscode
 # Editor directories and files
@@ -48,3 +49,5 @@ home
 home2
 test
 /src/types
+*.lock
+/server/package/coordinateStr/模板

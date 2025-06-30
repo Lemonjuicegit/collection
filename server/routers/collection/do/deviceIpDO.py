@@ -10,3 +10,4 @@ class DeviceIpDO(SQLModel, table=True):
     name: str = TYPE.UNIQUE
     ip: str
     grant:bool
+    owner: str | None

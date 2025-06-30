@@ -1,7 +1,6 @@
 from package.database import BaseService
-from fastapiUtils import cwdpath
-
+from fastapiUtils import cwd_path
 
 class Service(BaseService):
     def __init__(self, DO):
-        super().__init__(DO, rf"{cwdpath}\config.json")
+        super().__init__(DO, rf"{cwd_path}\config.json")

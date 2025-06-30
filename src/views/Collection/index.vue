@@ -54,7 +54,6 @@ const closeTagsAll = (curItem) => {
 
 const handleNodeClick = (data) => {
   // 节点点击
-  console.log(data)
   if (!data.is_group) {
     state.URL = data.URL
     tagsStore.active = data.name
@@ -185,7 +184,7 @@ const dropOptions = (data, node) => [
             </el-button>
           </Dropdown>
         </div>
-        <el-scrollbar height="1000px">
+        <el-scrollbar height="100%">
           <el-tree
             :default-expanded-keys="store.expandNode"
             style="height: 100%"

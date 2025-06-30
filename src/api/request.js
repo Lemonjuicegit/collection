@@ -23,7 +23,6 @@ export default {
     return res
   },
   post: async (option) => {
-    console.log('option', option)
     const res = await request({ method: 'POST', ...option })
     return res
   },

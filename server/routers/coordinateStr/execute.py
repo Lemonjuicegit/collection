@@ -6,6 +6,14 @@ from shapely import Point, Polygon, MultiPolygon
 
 class gardens:
     def __init__(self, jd, shppath, templaet) -> None:
+        """
+        处理园林数据的类，用于读取、处理和保存园林相关的地理数据。
+        
+        Args:
+        - jd: 保存处理后的经纬度数据的文件路径。
+        - shppath: 包含园林地理信息的shp文件路径。
+        - templaet: 用于处理数据的模板文件路径。
+        """
         self.gdf = gpd.read_file(shppath)
         self.temp_path = Path(templaet)
         self.temp = self.temp_path.read_text(encoding="gb2312").rpartition("\n")
@@ -22,6 +30,12 @@ class gardens:
         self.delgdf = gpd.GeoDataFrame(columns=["dkh", "geometry"], crs=self.gdf.crs)
 
     def getJd(self, save):
+        """
+        处理经纬度数据并保存到文件。
+        
+        Args:
+        - save: 保存处理后数据的文件路径。
+        """
         self.jd = gpd.GeoDataFrame(
             columns=["dkh", "xh", "JZDH", "geometry"], crs=self.gdf.crs
         )
@@ -76,6 +90,14 @@ class gardens:
         self.jd.to_file(save, encoding="gb18030")
 
     def delJd(self, accuracy, field, save):
+        """
+        根据精度删除多余的顶点。
+        
+        Args:
+        - accuracy: 顶点间的最小距离，用于决定是否删除顶点。
+        - field: 用于标识的字段名。
+        - save: 保存处理后数据的文件路径。
+        """
         def shan(row):
             sxy = [0, 0]
             xy = list(zip(row.geometry.exterior.xy[0], row.geometry.exterior.xy[1]))
@@ -100,6 +122,13 @@ class gardens:
         self.delgdf.to_file(save, encoding="gb18030")
 
     def get_coordinate_string(self, save, ndigits=2):
+        """
+        生成并保存坐标字符串。
+        
+        Args:
+        - save: 保存生成字符串的文件路径。
+        - ndigits: 保存小数点后的位数，默认为2。
+        """
         with open(save, "a", encoding="gb2312") as f:
             f.write(f"{self.temp_head}\n")
 

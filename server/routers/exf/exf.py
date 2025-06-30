@@ -7,10 +7,20 @@ current = Path(os.path.dirname(__file__))
 attributetab_path = current / "attributetab.json"
 attributetab = json.loads(attributetab_path.read_text(encoding="utf-8"))
 
-
 def hc_exf(gdbfile, savepath):
-    template_zd = current / "template" / "合川区宗地.exf"
-    template_fw = current / "template" / "合川区房屋.exf"
+    """
+    从给定的GDB文件中导出宗地和房屋数据，并根据模板生成相应的EXF文件。
+
+    Args:
+    gdbfile (str): GDB文件的路径。
+    savepath (str): 生成的EXF文件保存的路径。
+
+    return:
+    state.ERR (str): 当发生错误时，生成错误信息。
+    state.RES (str): 当成功生成EXF文件时，生成成功信息。
+    """
+    template_zd = current / "template" / "宗地模板.exf"
+    template_fw = current / "template" / "房屋模板.exf"
     with open(template_zd, "r", encoding="gb2312") as f:
         zd = f.read().split("\n")
     with open(template_fw, "r", encoding="gb2312") as f:
@@ -99,6 +109,21 @@ def hc_exf(gdbfile, savepath):
 
 
 def lq_exf(gdbpath, savepath):
+    """
+    从给定的GDB路径读取林权数据并保存为EXF格式文件。
+
+    该函数读取预定义模板文件“林权.exf”，然后尝试从给定的GDB路径中读取“宗地”图层。
+    它检查是否存在所有必需的字段，并为“宗地”图层中的每一项生成一个EXF文件。
+
+    Args:
+    gdbpath (str): GDB文件的路径。
+    savepath (str): 保存生成的EXF文件的路径。
+
+    return:
+    tuple: (状态码, 消息)
+        - 当生成EXF文件时，生成一个包含成功消息的元组。
+        - 如果发生错误，生成一个包含错误消息的元组。
+    """
     with open(current / "template" / "林权.exf", "r", encoding="gb2312") as f:
         zd = f.read().split("\n")
     try:
@@ -158,7 +183,17 @@ def lq_exf(gdbpath, savepath):
 
 
 def yb_exf(gdbpath, fwgdb, savepath):
-    with open(current / "template" / "渝北.exf", "r", encoding="gb2312") as f:
+    
+    """
+    根据给定的地理数据库路径、辅助图形数据库路径和保存路径，
+    生成并保存宗地的电子交换文件。
+
+    Args:
+    gdbpath (str): 地理数据库路径。
+    fwgdb (str): 辅助图形数据库路径。
+    savepath (str): 保存电子交换文件的路径。
+    """
+    with open(current / "template" / "模板.exf", "r", encoding="gb2312") as f:
         zd = f.read().split("\n")
 
     gdf_zd = gpd.read_file(gdbpath)
@@ -172,38 +207,38 @@ def yb_exf(gdbpath, fwgdb, savepath):
         xy_fw = gdf_fw.geometry.loc[0].exterior.xy
         xy_str = "\n".join([f"{x}∴{y}∴0.000000" for x, y in zip(xy[0], xy[1])])
         xy_str = f"{len(xy[0])}\n{xy_str}"
-        # xy_fw = '\n'.join([f'{x}∴{y}∴0.000000' for x,y in zip(xy_fw[0],xy_fw[1])])
-        # xy_fw = f"{len(xy_fw[0])}\n{xy_fw}"
-        # F_CODE_ID = row['F_CODE_ID'] if row['F_CODE_ID'] else 0.0
-        # F_TEMP_CODE = row['F_TEMP_CODE'] if row['F_TEMP_CODE'] else ''
-        # F_TEMP_NAME = row['F_TEMP_NAME'] if row['F_TEMP_NAME'] else ''
-        # F_PARCEL_NO = row['DJH']
+        xy_fw = '\n'.join([f'{x}∴{y}∴0.000000' for x,y in zip(xy_fw[0],xy_fw[1])])
+        xy_fw = f"{len(xy_fw[0])}\n{xy_fw}"
+        F_CODE_ID = row['F_CODE_ID'] if row['F_CODE_ID'] else 0.0
+        F_TEMP_CODE = row['F_TEMP_CODE'] if row['F_TEMP_CODE'] else ''
+        F_TEMP_NAME = row['F_TEMP_NAME'] if row['F_TEMP_NAME'] else ''
+        F_PARCEL_NO = row['DJH']
         ZDDM = row["ZDDM"]
-        # F_UNDER_CORNERID = row['F_UNDER_CORNERID'] if row['F_UNDER_CORNERID'] else 0.0
-        # F_LOC_CORNERID = row['F_LOC_CORNERID'] if row['F_LOC_CORNERID'] else 0.0
-        # F_LAND_LOC = row['ZL']
-        # F_CALCULATE_AREA = row['ZDMJ']
-        # F_CREATE_BY = row['F_CREATE_BY'] if row['F_CREATE_BY'] else ''
-        # F_CREATE_TIME = row['F_CREATE_TIME'] if row['F_CREATE_TIME'] else ''
-        # F_MODIFY_BY = row['F_MODIFY_BY'] if row['F_MODIFY_BY'] else ''
-        # F_MODIFY_TIME = row['F_MODIFY_TIME'] if row['F_MODIFY_TIME'] else ''
-        # F_MODIFY_CIRCS = row['F_MODIFY_CIRCS'] if row['F_MODIFY_CIRCS'] else 0
-        # F_INDB_RIGHTBY = row['F_INDB_RIGHTBY'] if row['F_INDB_RIGHTBY'] else ''
-        # F_SERIAL_NO = row['F_SERIAL_NO'] if row['F_SERIAL_NO'] else ''
-        # F_INDB_USETYPE = row['F_INDB_USETYPE'] if row['F_INDB_USETYPE'] else ''
-        # F_PARCEL_NUMBER = row['F_PARCEL_NUMBER'] if row['F_PARCEL_NUMBER'] else ''
-        # F_COMMENT = row['F_COMMENT'] if row['F_COMMENT'] else ''
-        # F_LOCKED = row['F_LOCKED'] if row['F_LOCKED'] else 0.0
-        # F_SITE_ID = row['F_SITE_ID'] if row['F_SITE_ID'] else 0
-        # F_FLY_LAND = row['F_FLY_LAND'] if row['F_FLY_LAND'] else 0
-        # F_RIGHT_PRO = row['F_RIGHT_PRO'] if row['F_RIGHT_PRO'] else 0
-        # F_PARCEL_NO_OLD = row['F_PARCEL_NO_OLD'] if row['F_PARCEL_NO_OLD'] else ''
-        # CODE = row['CODE'] if row['CODE'] else 0
+        F_UNDER_CORNERID = row['F_UNDER_CORNERID'] if row['F_UNDER_CORNERID'] else 0.0
+        F_LOC_CORNERID = row['F_LOC_CORNERID'] if row['F_LOC_CORNERID'] else 0.0
+        F_LAND_LOC = row['ZL']
+        F_CALCULATE_AREA = row['ZDMJ']
+        F_CREATE_BY = row['F_CREATE_BY'] if row['F_CREATE_BY'] else ''
+        F_CREATE_TIME = row['F_CREATE_TIME'] if row['F_CREATE_TIME'] else ''
+        F_MODIFY_BY = row['F_MODIFY_BY'] if row['F_MODIFY_BY'] else ''
+        F_MODIFY_TIME = row['F_MODIFY_TIME'] if row['F_MODIFY_TIME'] else ''
+        F_MODIFY_CIRCS = row['F_MODIFY_CIRCS'] if row['F_MODIFY_CIRCS'] else 0
+        F_INDB_RIGHTBY = row['F_INDB_RIGHTBY'] if row['F_INDB_RIGHTBY'] else ''
+        F_SERIAL_NO = row['F_SERIAL_NO'] if row['F_SERIAL_NO'] else ''
+        F_INDB_USETYPE = row['F_INDB_USETYPE'] if row['F_INDB_USETYPE'] else ''
+        F_PARCEL_NUMBER = row['F_PARCEL_NUMBER'] if row['F_PARCEL_NUMBER'] else ''
+        F_COMMENT = row['F_COMMENT'] if row['F_COMMENT'] else ''
+        F_LOCKED = row['F_LOCKED'] if row['F_LOCKED'] else 0.0
+        F_SITE_ID = row['F_SITE_ID'] if row['F_SITE_ID'] else 0
+        F_FLY_LAND = row['F_FLY_LAND'] if row['F_FLY_LAND'] else 0
+        F_RIGHT_PRO = row['F_RIGHT_PRO'] if row['F_RIGHT_PRO'] else 0
+        F_PARCEL_NO_OLD = row['F_PARCEL_NO_OLD'] if row['F_PARCEL_NO_OLD'] else ''
+        CODE = row['CODE'] if row['CODE'] else 0
 
-        # arr = f"0.0∴0.0∴112500000∴地表宗地∴{F_PARCEL_NO}∴{ZDDM}∴0.0" + \
-        #     f"∴0.0∴{F_LAND_LOC}∴{F_CALCULATE_AREA}∴李勇∴∴" + \
-        #     f"∴0∴胡国建∴{F_INDB_RIGHTBY}∴{F_SERIAL_NO}∴{F_INDB_USETYPE}∴{F_PARCEL_NUMBER}" + \
-        #     f"∴{F_COMMENT}∴{F_LOCKED}∴{F_SITE_ID}∴{F_FLY_LAND}∴{F_RIGHT_PRO}∴{F_PARCEL_NO_OLD}∴1∴{CODE}"
+        arr = f"0.0∴0.0∴112500000∴地表宗地∴{F_PARCEL_NO}∴{ZDDM}∴0.0" + \
+            f"∴0.0∴{F_LAND_LOC}∴{F_CALCULATE_AREA}∴**∴∴" + \
+            f"∴0∴**∴{F_INDB_RIGHTBY}∴{F_SERIAL_NO}∴{F_INDB_USETYPE}∴{F_PARCEL_NUMBER}" + \
+            f"∴{F_COMMENT}∴{F_LOCKED}∴{F_SITE_ID}∴{F_FLY_LAND}∴{F_RIGHT_PRO}∴{F_PARCEL_NO_OLD}∴1∴{CODE}"
         temp1 = "\n".join(zd[:1054])
         temp2 = "\n".join(zd[1054:1067])
         temp3 = "\n".join(zd[1067:1094])

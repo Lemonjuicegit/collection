@@ -74,6 +74,7 @@ export default defineConfig(({ command, mode }) => {
       outDir: env.VITE_OUT_DIR || 'dist',
       emptyOutDir: true,
       minify: 'terser',
+      sourcemap: true,
       terserOptions: {
         compress: {
           //生产环境时移除console

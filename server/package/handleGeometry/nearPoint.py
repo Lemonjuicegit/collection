@@ -1,11 +1,21 @@
 import math
 from pathlib import Path
-from typing import Union
 import geopandas as gpd
 from shapely import Polygon, MultiPolygon
 
+def del_near_point(xy, accuracy) -> list|tuple:
+    """
+    移除接近的点。
 
-def del_near_point(xy, accuracy):
+    遍历给定的坐标点列表，根据指定的精度移除过于接近的点，以简化几何形状。
+
+    Args:
+    xy (list of tuple): 坐标点列表，每个元素是一个包含x和y坐标的元组。
+    accuracy (float): 精度值，用于确定两点之间的最小距离。
+
+    返回:
+    list of tuple: 简化后的坐标点列表。
+    """
     count = len(xy)
     extXY = [xy[0]]
     for i in range(1, count - 1):
@@ -18,10 +28,22 @@ def del_near_point(xy, accuracy):
     return extXY
 
 
-def nearPoint(data: Path, accuracy: float, save: Path):
+def nearPoint(data: Path, accuracy: float, save: Path)->list:
+    """
+    处理地理数据，移除接近的点，并保存结果。
+
+    读取地理数据，对每个几何形状应用del_near_point函数，然后将处理后的数据保存到指定路径。
+
+    args:
+    data (Path): 输入数据文件的路径。
+    accuracy (float): 精度值，用于del_near_point函数。
+    save (Path): 输出数据文件的路径。
+
+    返回:
+    list: 保存处理后的数据文件路径。
+    """
     gdf = gpd.read_file(data)
     delgdf = gpd.GeoDataFrame(columns=gdf.columns)
-
     def shan(row):
         if type(row.geometry) == MultiPolygon:
             por = row.geometry.geoms[0]

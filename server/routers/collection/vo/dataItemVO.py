@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-
 class addDataItemArgs(BaseModel):
     title: str
     URL: str | None = None
@@ -10,7 +9,6 @@ class addDataItemArgs(BaseModel):
     router_name: str
     sort: int = None
     is_group: bool
-
 
 class DataItemArgs(BaseModel):
     id: int = None

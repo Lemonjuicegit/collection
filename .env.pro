@@ -4,7 +4,7 @@ NODE_ENV=production
 VITE_DEV=false
 
 # 请求路径
-VITE_BASE_URL='http://183.71.245.98:45454/'
+VITE_BASE_URL='http://192.168.2.139:45454/'
 
 # 上传路径
 # VITE_UPLOAD_URL=/admin-api/infra/file/upload
@@ -23,4 +23,4 @@ VITE_SOURCEMAP=false
 VITE_BASE_PATH=/
 
 # 输出路径
-VITE_OUT_DIR=E:/exploitation/collection/server/manage2
+VITE_OUT_DIR=D:/exploitation/collection/server/manage

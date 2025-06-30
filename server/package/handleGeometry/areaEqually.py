@@ -12,6 +12,21 @@ def areaEqually(
     Area_shp_field: str,
     precision:str
 ) -> gpd.GeoDataFrame:
+    """
+    根据行政区划面积和兴趣区域面积进行面积分配。
+
+    Args:
+    - XZQArea: 行政区划面积数据路径
+    - Area_shp: 兴趣区域面积数据路径
+    - XZQ_key: 行政区划数据的关键字段
+    - Area_key: 兴趣区域数据的关键字段
+    - XZQ_area_field: 行政区划数据中的面积字段
+    - Area_shp_field: 兴趣区域数据中的面积字段
+    - precision: 面积计算的精度
+
+    返回:
+    - gpd.GeoDataFrame: 经过面积分配处理的GeoDataFrame
+    """
     XZQArea_path = Path(XZQArea)
     Area_shp_path = Path(Area_shp)
     def compute(x):

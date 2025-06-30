@@ -35,7 +35,6 @@ export default {
     })
   },
   update: (apiUrl, data) => {
-    console.log(data)
     return request.post({
       url: `/collection/${apiUrl}/update`,
       data
@@ -56,6 +55,11 @@ export default {
   eqPath: (path) => {
     return request.get({
       url: `/collection/routerController/eq_path?path=${path}`
+    })
+  },
+  ipAccessAuthorization: (args_ip) => {
+    return request.get({
+      url: `/ip_access_authorization?args_ip=${args_ip}`
     })
   }
 }

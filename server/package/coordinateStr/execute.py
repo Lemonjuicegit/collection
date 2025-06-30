@@ -11,12 +11,10 @@ class gardens:
         self.temp = self.temp_path.read_text(encoding="gb2312").rpartition("\n")
         self.temp_head = self.temp[0]
         self.temp = self.temp[2].split(",")
-
         def filter_key(item):
             if len(item) > 0:
                 if item[0] == "#":
                     return item
-
         self.key_field = list(filter(filter_key, self.temp))[0][1:]
         if os.path.exists(jd):
             self.jd = gpd.read_file(jd)
@@ -131,16 +129,25 @@ class gardens:
             return save
 
 
-def jd_to_pol(data, key_field, save):
+def jd_to_pol(data, field, xh_field, key_field, save):
     gpdjd = gpd.read_file(data)
-    gpfplo = gpd.GeoDataFrame(columns=[key_field, "geometry"], crs=gpdjd.crs)
+    gpfplo = gpd.GeoDataFrame(columns=[*field, "geometry"], crs=gpdjd.crs)
     key = set(gpdjd[key_field].values)
     for i in key:
+        holes = []
         poly = gpdjd[gpdjd[key_field] == i]
-        x_list = poly["geometry"].x.tolist()
-        y_list = poly["geometry"].y.tolist()
+        xh_list = list(set(poly[xh_field].tolist()))
+        x_list = poly[poly[xh_field] == "1"]["geometry"].x.tolist()
+        y_list = poly[poly[xh_field] == "1"]["geometry"].y.tolist()
         xy_list = list(zip(x_list, y_list))
-        gpfplo.loc[gpfplo.shape[0]] = [i, Polygon(xy_list)]
+        if len(xh_list) > 1:
+            for xh in xh_list[1:]:
+                holes_x = poly[poly[xh_field] == xh]["geometry"].x.tolist()
+                holes_y = poly[poly[xh_field] == xh]["geometry"].y.tolist()
+                holes.append(list(zip(holes_x, holes_y)))
+            gpfplo.loc[gpfplo.shape[0]] = [i, Polygon(xy_list, holes=holes)]
+        else:
+            gpfplo.loc[gpfplo.shape[0]] = [i, Polygon(xy_list)]
     gpfplo.to_file(save, encoding="gb18030")
 
 

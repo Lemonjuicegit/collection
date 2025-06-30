@@ -18,10 +18,12 @@ def pdf_to_images(pdfpath, output_folder):
         output_folder (str|Path): 图片输出位置
     """
     for name in os.listdir(pdfpath):
-        images = convert_from_path(pdfpath, poppler_path=poppler_path)
+        images = convert_from_path(
+            os.path.join(pdfpath, name), poppler_path=poppler_path
+        )
         file_name = name.split(".")[0]
         for i, image in enumerate(images):
-            image.save(f"{output_folder}/{file_name}_{i}.jpg", "JPEG")
+            image.save(f"{output_folder}\\{file_name}_{i}.jpg", "JPEG")
 
 
 def pdf_to_word(pdf_file, docx_file):

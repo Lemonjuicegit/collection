@@ -39,7 +39,7 @@ const handlMenuClick = (data) => {
   <LayoutBase :minWidth="250">
     <template #aside-header>
       <div class="aside-header">
-        <p class="aside-title">办公网址管理</p>
+        <p class="aside-title">网址管理</p>
         <el-button size="small" type="success" @click="collAdd('router', state.dataTree)">
           <i-ep-plus />
         </el-button>

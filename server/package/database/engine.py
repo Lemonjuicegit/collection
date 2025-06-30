@@ -1,8 +1,8 @@
 from sqlmodel import create_engine, Session
 from package.utils import re_json
-from fastapiUtils import cwdpath
+from fastapiUtils import cwd_path
 
-# conf = re_json(rf"{cwdpath}\config.json")
+# conf = re_json(rf"{cwd_path}\config.json")
 
 # sqlite_file_name = conf["database"]["server"]
 # server = f"sqlite:///{sqlite_file_name}"

@@ -1,13 +1,11 @@
 import importlib
 from pathlib import Path
-from fastapiUtils import cwdpath
-
+from fastapiUtils import cwd_path
 
 def get_controller():
-    controller_path = Path(rf"{cwdpath}\routers\collection\controller")
+    controller_path = Path(rf"{cwd_path}\routers\collection\controller")
     pathlist = controller_path.iterdir()
     return [x.stem for x in pathlist if x.stem not in ["__init__", "__pycache__"]]
-
 
 def include_router(router):
     modules = get_controller()

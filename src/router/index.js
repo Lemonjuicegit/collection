@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import manage_api from '@/api/manage'
+import api from '@/api/manage'
 
 const routes = [
   {
@@ -42,6 +43,14 @@ const router = createRouter({
 })
 router.beforeEach(async (to) => {
   let user = sessionStorage.getItem('user')
+  if (to.name === 'error') {
+    return true
+  }
+  let ip_access = await api.ipAccessAuthorization(window.location.hostname)
+  if (ip_access.state === -1) {
+    console.log(ip_access)
+    return { name: 'error', params: { code: 403, msg: ip_access.res } }
+  }
   if (!user) {
     let res = (await manage_api.getUser()).data
     sessionStorage.setItem('user', JSON.stringify(res))
@@ -56,5 +65,4 @@ router.beforeEach(async (to) => {
   }
   return true
 })
-
 export default router

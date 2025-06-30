@@ -2,7 +2,6 @@ from routers.collection.service.service import Service
 from routers.collection.do import RouterDO
 from routers.utils import handleTree
 
-
 class RouterService(Service):
     def __init__(self):
         super().__init__(RouterDO)

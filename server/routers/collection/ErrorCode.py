@@ -1,10 +1,8 @@
 from sqlmodel import SQLModel
 from fastapi import HTTPException
-
 class ErrorCode(SQLModel):
     code: int  = 0
     msg:str = ""
-
 class ERR:
     SUCCESS: ErrorCode = ErrorCode()
     BAD_REQUEST: ErrorCode = ErrorCode(code=400, msg="请求参数错误")

@@ -1,8 +1,6 @@
 import geopandas as gpd
-import os
 from package.utils import groupby
 from shapely import MultiLineString, Point
-
 
 def AdjacentCoding(shp, fiedl_key, precision=0):
     """通过线的端点检查相邻线编码是否重复(排除三交以上的点)

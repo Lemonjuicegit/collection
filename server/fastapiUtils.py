@@ -1,15 +1,14 @@
 import importlib, traceback
 import os
-from routers import store, unzip, log, use, Api, get_tbbh, state, zip_list
+from routers import store, unzip, log, use, Api, state, zip_list
 from package.interface.setup import getFunc, setArgs
 from pathlib import Path
 import importlib
 
-cwdpath = os.getcwd()
-
+cwd_path = os.getcwd()
 
 def get_router_list():
-    router_path = Path(rf"{cwdpath}\routers")
+    router_path = Path(rf"{cwd_path}\routers")
     pathlist = router_path.iterdir()
     router_list = []
     for path_ in pathlist:
@@ -40,13 +39,11 @@ def include_router(app, rewrite):
                 tags=[router_name],
             )
 
-
 def split_args(args: str) -> dict:
     args = args.split("&")
     args = list(map(lambda x: x.split("="), args))
     args = dict(args)
     return args
-
 
 def handle(args, app, query, req):
     """

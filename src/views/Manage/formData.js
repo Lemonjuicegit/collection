@@ -20,8 +20,6 @@ export const editGroup = [
   }
 ]
 
-
-
 export const defaultProps = {
   children: 'children',
   label: 'title',
